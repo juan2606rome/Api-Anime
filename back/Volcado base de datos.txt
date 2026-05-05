@@ -1,0 +1,95 @@
+-- ============================================================
+--  VOLCADO SQL - Pokemon Microservice
+--  Base de datos: PostgreSQL (Supabase)
+--  Fecha: 2025
+-- ============================================================
+
+-- ─── CREAR TABLA ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS pokemon (
+  id          INTEGER PRIMARY KEY,
+  name        VARCHAR(100) NOT NULL UNIQUE,
+  front_image TEXT,
+  back_image  TEXT,
+  shiny_image TEXT,
+  height      INTEGER,
+  weight      INTEGER,
+  type        VARCHAR(50)
+);
+
+-- ─── LIMPIAR DATOS ANTERIORES (opcional) ─────────────────────
+-- TRUNCATE TABLE pokemon RESTART IDENTITY;
+
+-- ─── INSERTAR 10 POKÉMON ─────────────────────────────────────
+INSERT INTO pokemon (id, name, front_image, back_image, shiny_image, height, weight, type) VALUES
+(1,
+ 'bulbasaur',
+ 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/1.png',
+ 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/1.png',
+ 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/1.png',
+ 7, 69, 'grass'),
+
+(4,
+ 'charmander',
+ 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/4.png',
+ 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/4.png',
+ 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/4.png',
+ 6, 85, 'fire'),
+
+(7,
+ 'squirtle',
+ 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/7.png',
+ 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/7.png',
+ 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/7.png',
+ 5, 90, 'water'),
+
+(25,
+ 'pikachu',
+ 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png',
+ 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/25.png',
+ 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/25.png',
+ 4, 60, 'electric'),
+
+(39,
+ 'jigglypuff',
+ 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/39.png',
+ 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/39.png',
+ 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/39.png',
+ 5, 55, 'fairy'),
+
+(52,
+ 'meowth',
+ 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/52.png',
+ 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/52.png',
+ 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/52.png',
+ 4, 42, 'normal'),
+
+(94,
+ 'gengar',
+ 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/94.png',
+ 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/94.png',
+ 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/94.png',
+ 15, 405, 'ghost'),
+
+(132,
+ 'ditto',
+ 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/132.png',
+ 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/132.png',
+ 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/132.png',
+ 3, 40, 'normal'),
+
+(133,
+ 'eevee',
+ 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/133.png',
+ 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/133.png',
+ 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/133.png',
+ 3, 65, 'normal'),
+
+(143,
+ 'snorlax',
+ 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/143.png',
+ 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/back/143.png',
+ 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/shiny/143.png',
+ 21, 4600, 'normal');
+
+-- ─── VERIFICAR ───────────────────────────────────────────────
+-- SELECT * FROM pokemon ORDER BY id;
