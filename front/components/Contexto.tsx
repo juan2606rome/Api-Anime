@@ -9,7 +9,7 @@ export function ContextoProvider({children}: any){
 
     return (
     <ContextoConstante.Provider value={{dataSeiya,setDataSeiya,dataHunter,setDataHunter,dataOnePiece,setDataOnePiece}}>
-    children}
+    {children}
     </ContextoConstante.Provider>
     )
 }
