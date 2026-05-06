@@ -1,7 +1,7 @@
 import { ContextoConstante } from "@/components/Contexto";
 import Tarjeta from "@/components/Tarjeta";
 import { useContext, useState } from "react";
-import { Button, FlatList, Image, Modal, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Button, FlatList, Image, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
 
 export default function HunterXHunter() {
@@ -61,6 +61,10 @@ export default function HunterXHunter() {
 
   return (
     <View style={styles.container}>
+      <ScrollView 
+      contentContainerStyle={styles.scrollContent} 
+      showsVerticalScrollIndicator={false}
+    >
       <Text style={styles.title}>Hunter x Hunter: Characters</Text>
 
       <TextInput
@@ -99,7 +103,7 @@ export default function HunterXHunter() {
           </>
         )}
       </Tarjeta>
-
+</ScrollView>
       {/* ══════════════ MODAL GALERÍA ══════════════ */}
       <Modal
         animationType="slide"
@@ -144,12 +148,14 @@ export default function HunterXHunter() {
 }
 
 const styles = StyleSheet.create({
-  container: {
+container: {
     flex: 1,
+    backgroundColor: "#0a0a1a",
+  },
+scrollContent: {
     padding: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#1a1c1a", // Fondo oscuro verdoso
+    alignItems: "center", // Centra los elementos horizontalmente
+    paddingBottom: 40,    // Espacio extra al final para que el botón no quede pegado
   },
   title: {
     fontSize: 24,
@@ -157,15 +163,14 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     color: "#4CAF50", // Verde Hunter
   },
-  input: {
-    width: "80%",
+input: {
+    width: "100%", // Cambiado a 100% para que use el ancho del padding del scroll
     borderWidth: 1,
     borderColor: "#4CAF50",
     borderRadius: 10,
     padding: 10,
     marginBottom: 15,
-    backgroundColor: "#f0f0f0",
-    color: "#000",
+    backgroundColor: "#fff",
   },
   botonesRow: {
     flexDirection: "row",

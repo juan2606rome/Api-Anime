@@ -1,7 +1,7 @@
 import { ContextoConstante } from "@/components/Contexto";
 import Tarjeta from "@/components/Tarjeta";
 import { useContext, useState } from "react";
-import { Button, FlatList, Image, Modal, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Button, FlatList, Image, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
 
 export default function OnePiece() {
@@ -61,6 +61,10 @@ export default function OnePiece() {
 
   return (
     <View style={styles.container}>
+            <ScrollView 
+            contentContainerStyle={styles.scrollContent} 
+            showsVerticalScrollIndicator={false}
+          >
       <Text style={styles.title}>One Piece: Characters</Text>
 
       <TextInput
@@ -99,7 +103,7 @@ export default function OnePiece() {
           </>
         )}
       </Tarjeta>
-
+</ScrollView>
       {/* ══════════════ MODAL GALERÍA ══════════════ */}
       <Modal
         animationType="slide"
@@ -144,12 +148,14 @@ export default function OnePiece() {
 }
 
 const styles = StyleSheet.create({
-  container: {
+container: {
     flex: 1,
+    backgroundColor: "#0a0a1a",
+  },
+scrollContent: {
     padding: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#1a130f", // Fondo oscuro tipo madera de barco
+    alignItems: "center", // Centra los elementos horizontalmente
+    paddingBottom: 40,    // Espacio extra al final para que el botón no quede pegado
   },
   title: {
     fontSize: 26,
@@ -160,15 +166,14 @@ const styles = StyleSheet.create({
     textShadowOffset: {width: -1, height: 1},
     textShadowRadius: 10
   },
-  input: {
-    width: "80%",
-    borderWidth: 2,
-    borderColor: "#D2122E",
+input: {
+    width: "100%", // Cambiado a 100% para que use el ancho del padding del scroll
+    borderWidth: 1,
+    borderColor: "#FFD700",
     borderRadius: 10,
     padding: 10,
     marginBottom: 15,
-    backgroundColor: "#FFFDD0", // Color pergamino/Wanted poster
-    color: "#000",
+    backgroundColor: "#fff",
   },
   botonesRow: {
     flexDirection: "row",

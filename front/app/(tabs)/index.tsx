@@ -1,7 +1,7 @@
 import { ContextoConstante } from "@/components/Contexto";
 import Tarjeta from "@/components/Tarjeta";
 import { useContext, useState } from "react";
-import { Button, FlatList, Image, Modal, Platform, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Button, FlatList, Image, Modal, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
 export default function SaintSeiya() {
   // Mantenemos el nombre de la variable de contexto como pediste
@@ -61,6 +61,10 @@ export default function SaintSeiya() {
 
   return (
     <View style={styles.container}>
+      <ScrollView 
+      contentContainerStyle={styles.scrollContent} 
+      showsVerticalScrollIndicator={false}
+    >
       <Text style={styles.title}>Saint Seiya: Characters</Text>
 
       <TextInput
@@ -101,7 +105,7 @@ export default function SaintSeiya() {
           </>
         )}
       </Tarjeta>
-
+    </ScrollView>
       {/* ══════════════ MODAL GALERÍA ══════════════ */}
       <Modal
         animationType="slide"
@@ -146,12 +150,14 @@ export default function SaintSeiya() {
 }
 
 const styles = StyleSheet.create({
-  container: {
+container: {
     flex: 1,
+    backgroundColor: "#0a0a1a",
+  },
+scrollContent: {
     padding: 20,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "#0a0a1a", // Fondo oscuro tipo espacio
+    alignItems: "center", // Centra los elementos horizontalmente
+    paddingBottom: 40,    // Espacio extra al final para que el botón no quede pegado
   },
   title: {
     fontSize: 24,
@@ -159,8 +165,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     color: "#DAA520", // Color dorado
   },
-  input: {
-    width: "80%",
+input: {
+    width: "100%", // Cambiado a 100% para que use el ancho del padding del scroll
     borderWidth: 1,
     borderColor: "#DAA520",
     borderRadius: 10,
