@@ -14,7 +14,7 @@ const client = new Client(
     : {
         host: 'localhost',
         port: 5432,
-        database: 'pokemon_db',
+        database: 'pokemon_db', // Asegúrate de que en local usas esta DB
         user: 'postgres',
         password: '1234'
       }
@@ -56,6 +56,7 @@ const server = http.createServer(async (req, res) => {
     return res.end();
   }
 
+  // Parseamos la URL para obtener la ruta
   const parsedUrl = url.parse(req.url, true);
   const path = parsedUrl.pathname;
 
@@ -79,41 +80,44 @@ const server = http.createServer(async (req, res) => {
 
   // ─── RUTA DINÁMICA ────────
   if (path.startsWith('/anime/')) {
+    // Dividimos la ruta y limpiamos espacios vacíos
     const partes = path.split('/').filter(Boolean);
 
     const anime = partes[1];
     const tabla = tablas[anime];
 
     if (!tabla) {
-      return sendJSON(res, 404, { error: 'Anime no válido' });
+      return sendJSON(res, 404, { error: 'Anime no válido. Intenta con saintseiya, hunterxhunter o onepiece.' });
     }
 
-    // ─── GET TODOS ─────────
+    // ─── GET TODOS (Ej: /anime/hunterxhunter) ─────────
     if (partes.length === 2) {
       try {
-        const result = await client.query(`SELECT * FROM ${tabla} ORDER BY id`);
+        // Envolvemos el nombre de la tabla en comillas dobles por seguridad en PostgreSQL
+        const result = await client.query(`SELECT * FROM "${tabla}" ORDER BY id`);
         return sendJSON(res, 200, result.rows);
       } catch (err) {
         return sendJSON(res, 500, { error: err.message });
       }
     }
 
-    // ─── GET POR ID O NOMBRE ─
+    // ─── GET POR ID O NOMBRE (Ej: /anime/hunterxhunter/1 o /anime/hunterxhunter/gon freecss) ─
     if (partes.length === 3) {
       const param = decodeURIComponent(partes[2]).toLowerCase();
-      const esNumero = !isNaN(param);
+      // Verificamos si el parámetro es estrictamente un número
+      const esNumero = !isNaN(param) && param.trim() !== '';
 
       try {
         const query = esNumero
-          ? `SELECT * FROM ${tabla} WHERE id = $1`
-          : `SELECT * FROM ${tabla} WHERE LOWER(nombre) = $1`;
+          ? `SELECT * FROM "${tabla}" WHERE id = $1`
+          : `SELECT * FROM "${tabla}" WHERE LOWER(nombre) = $1`;
 
-        const valor = esNumero ? parseInt(param) : param;
+        const valor = esNumero ? parseInt(param, 10) : param;
 
         const result = await client.query(query, [valor]);
 
         if (!result.rows[0]) {
-          return sendJSON(res, 404, { error: `No encontrado: ${param}` });
+          return sendJSON(res, 404, { error: `Personaje no encontrado: ${param}` });
         }
 
         return sendJSON(res, 200, result.rows[0]);
@@ -123,14 +127,14 @@ const server = http.createServer(async (req, res) => {
     }
   }
 
-  // ─── 404 ─────────────────
+  // ─── 404 GLOBAL ─────────────────
   return sendJSON(res, 404, {
-    error: 'Ruta no existe'
+    error: 'Ruta no existe. Verifica los endpoints disponibles en /'
   });
 });
 
 // ─── START ─────────────────
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`🚀 http://localhost:${PORT}`);
+  console.log(`🚀 Servidor corriendo en el puerto ${PORT}`);
 });
