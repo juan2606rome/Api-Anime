@@ -51,71 +51,49 @@ const sendJSON = (res, status, data) => {
 const swaggerSpec = {
   openapi: '3.0.3',
   info: {
-    title: 'Anime Microservice API',
-    version: '1.0.0',
+    title: 'Anime Characters Microservice API',
+    version: '1.1.0',
     description:
-      'Microservicio REST para consultar personajes de animes almacenados en PostgreSQL (Supabase). ' +
-      'Animes disponibles: saintseiya, hunterxhunter, onepiece.'
+      'API REST profesional para la consulta de personajes de sagas legendarias. ' +
+      'Extrae datos en tiempo real desde PostgreSQL (Supabase/Render).',
+    contact: {
+      name: 'Soporte API',
+      url: 'https://github.com/tu-usuario/repo'
+    }
   },
   servers: [
-    { url: 'https://api-animemicroservicio.onrender.com', description: 'Producción (Render)' },
-    { url: 'http://localhost:3000', description: 'Desarrollo local' }
+    { url: 'https://api-animemicroservicio.onrender.com', description: 'Servidor de Producción' },
+    { url: 'http://localhost:3000', description: 'Servidor Local de Desarrollo' }
   ],
   tags: [
-    { name: 'Root',            description: 'Información general del microservicio' },
-    { name: 'Anime',           description: 'Listado de animes disponibles' },
-    { name: 'Saint Seiya',     description: 'Personajes de Saint Seiya — Los Caballeros del Zodiaco' },
-    { name: 'Hunter x Hunter', description: 'Personajes de Hunter x Hunter' },
-    { name: 'One Piece',       description: 'Personajes de One Piece' }
+    { name: 'General', description: 'Endpoints informativos del servicio' },
+    { name: 'Personajes', description: 'Consultas detalladas de la base de datos' }
   ],
   paths: {
-
-    // ── ROOT ──────────────────────────────────────────────────────────────
     '/': {
       get: {
-        tags: ['Root'],
-        summary: 'Información general del servicio',
-        operationId: 'getRoot',
-        description: 'Devuelve metadata del microservicio y los endpoints disponibles.',
+        tags: ['General'],
+        summary: 'Estado del servicio',
         responses: {
           '200': {
-            description: 'Metadata del microservicio',
+            description: 'Información de bienvenida y rutas disponibles',
             content: {
-              'application/json': {
-                schema: { $ref: '#/components/schemas/ServiceInfo' },
-                example: {
-                  servicio: 'Anime Microservice',
-                  endpoints: {
-                    animes:   '/anime',
-                    ejemplo1: '/anime/onepiece',
-                    ejemplo2: '/anime/onepiece/1',
-                    ejemplo3: '/anime/hunterxhunter/gon freecss',
-                    swagger:  '/api-docs'
-                  }
-                }
-              }
+              'application/json': { schema: { $ref: '#/components/schemas/ServiceInfo' } }
             }
           }
         }
       }
     },
-
-    // ── LISTAR ANIMES ─────────────────────────────────────────────────────
     '/anime': {
       get: {
-        tags: ['Anime'],
-        summary: 'Listar todos los animes disponibles',
-        operationId: 'getAnimes',
-        description: 'Devuelve un array con las claves de los animes soportados por el microservicio.',
+        tags: ['General'],
+        summary: 'Listar categorías disponibles',
+        description: 'Obtiene las claves válidas para usar en los endpoints de personajes.',
         responses: {
           '200': {
-            description: 'Lista de claves de animes',
+            description: 'Lista de strings con los nombres de las tablas/animes',
             content: {
               'application/json': {
-                schema: {
-                  type: 'array',
-                  items: { type: 'string' }
-                },
                 example: ['saintseiya', 'hunterxhunter', 'onepiece']
               }
             }
@@ -123,148 +101,64 @@ const swaggerSpec = {
         }
       }
     },
-
-    // ── TODOS LOS PERSONAJES DE UN ANIME ──────────────────────────────────
     '/anime/{anime}': {
       get: {
-        tags: ['Saint Seiya', 'Hunter x Hunter', 'One Piece'],
-        summary: 'Listar todos los personajes de un anime',
-        operationId: 'getPersonajesByAnime',
-        description: 'Devuelve todos los personajes almacenados de un anime específico, ordenados por ID.',
+        tags: ['Personajes'],
+        summary: 'Obtener todos los personajes de un anime',
         parameters: [
           {
             name: 'anime',
             in: 'path',
             required: true,
-            description: 'Clave del anime (saintseiya, hunterxhunter, onepiece)',
-            schema: {
-              type: 'string',
-              enum: ['saintseiya', 'hunterxhunter', 'onepiece']
-            },
-            examples: {
-              saintseiya:    { summary: 'Saint Seiya',     value: 'saintseiya'    },
-              hunterxhunter: { summary: 'Hunter x Hunter', value: 'hunterxhunter' },
-              onepiece:      { summary: 'One Piece',        value: 'onepiece'      }
-            }
+            description: 'Nombre del anime',
+            schema: { type: 'string', enum: ['saintseiya', 'hunterxhunter', 'onepiece'] }
           }
         ],
         responses: {
           '200': {
-            description: 'Lista de personajes del anime',
+            description: 'Colección completa de personajes',
             content: {
               'application/json': {
-                schema: {
-                  type: 'array',
-                  items: { $ref: '#/components/schemas/Personaje' }
-                },
+                schema: { type: 'array', items: { $ref: '#/components/schemas/Personaje' } },
                 examples: {
-                  hunterxhunter: {
-                    summary: 'Ejemplo — Hunter x Hunter',
-                    value: [
-                      { id: 1, nombre: 'Gon Freecss' },
-                      { id: 2, nombre: 'Killua Zoldyck' },
-                      { id: 3, nombre: 'Kurapika' },
-                      { id: 4, nombre: 'Leorio Paradinight' }
-                    ]
-                  },
                   saintseiya: {
-                    summary: 'Ejemplo — Saint Seiya',
+                    summary: 'Ejemplo Saint Seiya (Completo)',
                     value: [
-                      { id: 1, nombre: 'Seiya de Pegaso' },
-                      { id: 2, nombre: 'Shiryu de Dragon' },
-                      { id: 3, nombre: 'Hyoga del Cisne' }
+                      {
+                        id: 1,
+                        nombre: "Pegasus Seiya",
+                        edad: "13",
+                        poder_tecnica: "Pegasus Ryūsei Ken",
+                        nacionalidad: "Japón",
+                        imagen1: "https://..."
+                      }
                     ]
                   },
                   onepiece: {
-                    summary: 'Ejemplo — One Piece',
-                    value: [
-                      { id: 1, nombre: 'Monkey D Luffy' },
-                      { id: 2, nombre: 'Roronoa Zoro' },
-                      { id: 3, nombre: 'Nami' }
-                    ]
+                    summary: 'Ejemplo One Piece (Simple)',
+                    value: [{ id: 1, nombre: "Monkey D. Luffy" }]
                   }
                 }
               }
             }
           },
-          '404': {
-            description: 'Anime no válido',
-            content: {
-              'application/json': {
-                schema: { $ref: '#/components/schemas/Error' },
-                example: {
-                  error: 'Anime no válido. Intenta con saintseiya, hunterxhunter o onepiece.'
-                }
-              }
-            }
-          },
-          '500': {
-            description: 'Error interno del servidor',
-            content: {
-              'application/json': { schema: { $ref: '#/components/schemas/Error' } }
-            }
-          }
+          '404': { $ref: '#/components/responses/NotFound' }
         }
       }
     },
-
-    // ── PERSONAJE POR ID O NOMBRE ─────────────────────────────────────────
     '/anime/{anime}/{idOrNombre}': {
       get: {
-        tags: ['Saint Seiya', 'Hunter x Hunter', 'One Piece'],
-        summary: 'Buscar personaje por ID o nombre',
-        operationId: 'getPersonajeByIdOrNombre',
-        description:
-          'Busca un personaje dentro del anime indicado. ' +
-          'Si el parámetro es numérico busca por id; si es texto busca por nombre (case-insensitive).',
+        tags: ['Personajes'],
+        summary: 'Buscar personaje específico',
+        description: 'Permite buscar por el ID numérico o por el nombre exacto del personaje.',
         parameters: [
-          {
-            name: 'anime',
-            in: 'path',
-            required: true,
-            description: 'Clave del anime (saintseiya, hunterxhunter, onepiece)',
-            schema: {
-              type: 'string',
-              enum: ['saintseiya', 'hunterxhunter', 'onepiece']
-            },
-            examples: {
-              saintseiya:    { summary: 'Saint Seiya',     value: 'saintseiya'    },
-              hunterxhunter: { summary: 'Hunter x Hunter', value: 'hunterxhunter' },
-              onepiece:      { summary: 'One Piece',        value: 'onepiece'      }
-            }
-          },
-          {
-            name: 'idOrNombre',
-            in: 'path',
-            required: true,
-            description: 'ID numérico (ej: 1) o nombre del personaje en minúsculas (ej: gon freecss)',
-            schema: { type: 'string' },
-            examples: {
-              porId_hxh: {
-                summary: 'Por ID — Hunter x Hunter',
-                value: '1'
-              },
-              porNombre_hxh: {
-                summary: 'Por nombre — Hunter x Hunter',
-                value: 'gon freecss'
-              },
-              porId_ss: {
-                summary: 'Por ID — Saint Seiya',
-                value: '1'
-              },
-              porNombre_ss: {
-                summary: 'Por nombre — Saint Seiya',
-                value: 'seiya de pegaso'
-              },
-              porId_op: {
-                summary: 'Por ID — One Piece',
-                value: '1'
-              },
-              porNombre_op: {
-                summary: 'Por nombre — One Piece',
-                value: 'monkey d luffy'
-              }
-            }
+          { name: 'anime', in: 'path', required: true, schema: { type: 'string' } },
+          { 
+            name: 'idOrNombre', 
+            in: 'path', 
+            required: true, 
+            description: 'ID (ej: 1) o Nombre (ej: Pegasus Seiya)',
+            schema: { type: 'string' } 
           }
         ],
         responses: {
@@ -274,98 +168,62 @@ const swaggerSpec = {
               'application/json': {
                 schema: { $ref: '#/components/schemas/Personaje' },
                 examples: {
-                  hunterxhunter: {
-                    summary: 'Gon Freecss — Hunter x Hunter',
-                    value: { id: 1, nombre: 'Gon Freecss' }
-                  },
-                  saintseiya: {
-                    summary: 'Seiya — Saint Seiya',
-                    value: { id: 1, nombre: 'Seiya de Pegaso' }
-                  },
-                  onepiece: {
-                    summary: 'Luffy — One Piece',
-                    value: { id: 1, nombre: 'Monkey D Luffy' }
+                  shaka: {
+                    summary: 'Búsqueda de Virgo Shaka',
+                    value: {
+                      id: 7,
+                      nombre: "Virgo Shaka",
+                      poder_tecnica: "Tenbu Hōrin",
+                      nacionalidad: "India"
+                    }
                   }
                 }
               }
             }
           },
-          '404': {
-            description: 'Personaje o anime no encontrado',
-            content: {
-              'application/json': {
-                schema: { $ref: '#/components/schemas/Error' },
-                examples: {
-                  personajeNoExiste: {
-                    summary: 'Nombre no existe en la DB',
-                    value: { error: 'Personaje no encontrado: naruto' }
-                  },
-                  animeInvalido: {
-                    summary: 'Anime no válido',
-                    value: { error: 'Anime no válido. Intenta con saintseiya, hunterxhunter o onepiece.' }
-                  }
-                }
-              }
-            }
-          },
-          '500': {
-            description: 'Error interno del servidor',
-            content: {
-              'application/json': { schema: { $ref: '#/components/schemas/Error' } }
-            }
-          }
+          '404': { $ref: '#/components/responses/NotFound' }
         }
       }
     }
   },
-
   components: {
     schemas: {
       Personaje: {
         type: 'object',
-        description:
-          'Representación de un personaje de anime. Los campos exactos dependen de cada tabla en la base de datos. ' +
-          'Siempre incluye al menos id y nombre.',
         required: ['id', 'nombre'],
         properties: {
-          id: {
-            type: 'integer',
-            description: 'ID único del personaje',
-            example: 1
-          },
-          nombre: {
-            type: 'string',
-            description: 'Nombre completo del personaje',
-            example: 'Gon Freecss'
-          }
-        },
-        additionalProperties: true
+          id: { type: 'integer', example: 1 },
+          nombre: { type: 'string', example: 'Pegasus Seiya' },
+          edad: { type: 'string', example: '13', nullable: true },
+          poder_tecnica: { type: 'string', example: 'Pegasus Ryūsei Ken', nullable: true },
+          nacionalidad: { type: 'string', example: 'Japón', nullable: true },
+          imagen1: { type: 'string', format: 'uri' },
+          imagen2: { type: 'string', format: 'uri' },
+          imagen3: { type: 'string', format: 'uri' },
+          imagen4: { type: 'string', format: 'uri' }
+        }
       },
       ServiceInfo: {
         type: 'object',
         properties: {
-          servicio: {
-            type: 'string',
-            example: 'Anime Microservice'
-          },
-          endpoints: {
-            type: 'object',
-            properties: {
-              animes:   { type: 'string', example: '/anime' },
-              ejemplo1: { type: 'string', example: '/anime/onepiece' },
-              ejemplo2: { type: 'string', example: '/anime/onepiece/1' },
-              ejemplo3: { type: 'string', example: '/anime/hunterxhunter/gon freecss' },
-              swagger:  { type: 'string', example: '/api-docs' }
-            }
-          }
+          servicio: { type: 'string' },
+          endpoints: { type: 'object' }
         }
       },
       Error: {
         type: 'object',
         properties: {
-          error: {
-            type: 'string',
-            example: 'Ruta no existe. Ve a /api-docs para la documentación.'
+          error: { type: 'string' }
+        }
+      }
+    },
+    responses: {
+      NotFound: {
+        description: 'No se encontró el recurso',
+        content: {
+          'application/json': {
+            schema: { $ref: '#/components/schemas/Error' },
+            example: { error: 'Personaje no encontrado: goku' }
           }
         }
       }
