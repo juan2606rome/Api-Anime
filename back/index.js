@@ -152,7 +152,13 @@ const swaggerSpec = {
         summary: 'Buscar personaje específico',
         description: 'Permite buscar por el ID numérico o por el nombre exacto del personaje.',
         parameters: [
-          { name: 'anime', in: 'path', required: true, schema: { type: 'string' } },
+                    {
+            name: 'anime',
+            in: 'path',
+            required: true,
+            description: 'Nombre del anime',
+            schema: { type: 'string', enum: ['saintseiya', 'hunterxhunter', 'onepiece'] }
+          },
           { 
             name: 'idOrNombre', 
             in: 'path', 
