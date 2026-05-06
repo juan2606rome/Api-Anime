@@ -76,7 +76,7 @@ export default function HunterXHunter() {
       />
 
       <View style={styles.botonesRow}>
-        <Button title="Consultar Licencia" onPress={consultarLocal} color="#2E8B57" />
+        <Button title="Consultar Personaje" onPress={consultarLocal} color="#2E8B57" />
       </View>
 
       <Tarjeta>
@@ -116,7 +116,7 @@ export default function HunterXHunter() {
 
             <View style={styles.titleContainer}>
               <Text style={styles.title2}>
-                Registros Visuales
+                Galeria de imagenes
               </Text>
               <Pressable onPress={() => setIsModalVisible(false)}>
                 <Text style={styles.cerrarBtn}>✕</Text>

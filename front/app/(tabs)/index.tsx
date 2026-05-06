@@ -99,7 +99,7 @@ export default function SaintSeiya() {
         {imagenes.length > 0 && (
           <>
             <Text style={styles.contador}>
-              🛡️ {imagenes.length} versiones encontradas
+              🛡️ {imagenes.length} Imagenes encontradas
             </Text>
             <Button title="Ver Galería" onPress={() => setIsModalVisible(true)} color="#4682B4" />
           </>
@@ -118,7 +118,7 @@ export default function SaintSeiya() {
 
             <View style={styles.titleContainer}>
               <Text style={styles.title2}>
-                Armaduras y Versiones
+                Galeria de imagenes
               </Text>
               <Pressable onPress={() => setIsModalVisible(false)}>
                 <Text style={styles.cerrarBtn}>✕</Text>

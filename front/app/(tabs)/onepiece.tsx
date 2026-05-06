@@ -116,7 +116,7 @@ export default function OnePiece() {
 
             <View style={styles.titleContainer}>
               <Text style={styles.title2}>
-                Bitácora de Imágenes
+                Galeria de imagenes
               </Text>
               <Pressable onPress={() => setIsModalVisible(false)}>
                 <Text style={styles.cerrarBtn}>✕</Text>
