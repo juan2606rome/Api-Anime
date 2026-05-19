@@ -1,29 +1,22 @@
 import { ReactNode } from "react";
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from "react-native";
 
-type Props = {
-    children: ReactNode //props para que tome children, todo lo que esta adentro 
-}
-
-export default function Tarjeta({children} : Props ){
-    return(
-        <View style = {styles.card}>{children}</View>
-        //Todo lo de children es lo que estara dentro de la tarjeta, es decir
-        //todo dentro de esta tarteja.tsx tendra el estilo de card
-    )
+export default function Tarjeta({ children }: { children: ReactNode }) {
+  return <View style={styles.tarjeta}>{children}</View>;
 }
 
 const styles = StyleSheet.create({
-  card: {
+  tarjeta: {
     backgroundColor: "#fff",
-    padding: 15,
     borderRadius: 15,
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowRadius: 5,
-    elevation: 5, // android
+    padding: 20,
     marginTop: 20,
-    width: "80%",
+    width: "100%",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
     alignItems: "center",
   },
 });

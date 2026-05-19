@@ -1,16 +1,41 @@
-import { createContext, useState } from "react";
+import { createContext, ReactNode, useState } from "react";
 
-export const ContextoConstante = createContext<any>(null);
-
-export function ContextoProvider({children}: any){
-    const [dataSeiya, setDataSeiya] = useState(null)
-    const [dataHunter, setDataHunter] = useState(null)
-    const [dataOnePiece, setDataOnePiece] = useState(null)
-
-    return (
-    <ContextoConstante.Provider value={{dataSeiya,setDataSeiya,dataHunter,setDataHunter,dataOnePiece,setDataOnePiece}}>
-    {children}
-    </ContextoConstante.Provider>
-    )
+export interface AnimePersonalizado {
+  nombre_clave: string;
+  nombre_display: string;
 }
 
+interface ContextoType {
+  usuarioLogueado: string | null;
+  setUsuarioLogueado: (u: string | null) => void;
+  dataSeiya: any;
+  setDataSeiya: (d: any) => void;
+  dataHunter: any;
+  setDataHunter: (d: any) => void;
+  dataOnePiece: any;
+  setDataOnePiece: (d: any) => void;
+  animesPersonalizados: AnimePersonalizado[];
+  setAnimesPersonalizados: (a: AnimePersonalizado[]) => void;
+}
+
+export const ContextoConstante = createContext<ContextoType>({} as ContextoType);
+
+export function ContextoProvider({ children }: { children: ReactNode }) {
+  const [usuarioLogueado, setUsuarioLogueado] = useState<string | null>(null);
+  const [dataSeiya, setDataSeiya]             = useState<any>(null);
+  const [dataHunter, setDataHunter]           = useState<any>(null);
+  const [dataOnePiece, setDataOnePiece]       = useState<any>(null);
+  const [animesPersonalizados, setAnimesPersonalizados] = useState<AnimePersonalizado[]>([]);
+
+  return (
+    <ContextoConstante.Provider value={{
+      usuarioLogueado, setUsuarioLogueado,
+      dataSeiya, setDataSeiya,
+      dataHunter, setDataHunter,
+      dataOnePiece, setDataOnePiece,
+      animesPersonalizados, setAnimesPersonalizados,
+    }}>
+      {children}
+    </ContextoConstante.Provider>
+  );
+}

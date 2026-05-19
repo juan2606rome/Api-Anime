@@ -1,0 +1,1 @@
+sonar-scanner -D"sonar.projectKey=anime-backend" -D"sonar.sources=." -D"sonar.host.url=http://localhost:9000" -D"sonar.login=sqp_6155b5d2e4db7b9f89378334ce49d88b5c6cffc6"
