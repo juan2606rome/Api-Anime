@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useContext, useState } from "react";
 import {
   Button,
   FlatList,
@@ -12,6 +12,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { ContextoConstante } from "./Contexto";
 import Tarjeta from "./Tarjeta";
 
 const API_URL = "https://api-animemicroservicio.onrender.com";
@@ -48,6 +49,8 @@ const CONFIG: Record<
 };
 
 export default function AnimeView({ animeKey, titulo, color, visible = true }: Props) {
+  const { setDataSeiya, setDataHunter, setDataOnePiece } = useContext(ContextoConstante);
+
   const [texto, setTexto] = useState("");
   const [nombre, setNombre] = useState("");
   const [edad, setEdad] = useState("");
@@ -62,6 +65,7 @@ export default function AnimeView({ animeKey, titulo, color, visible = true }: P
 
   async function consultar() {
     const busqueda = texto.trim();
+
     if (!busqueda) {
       setError("Escribe un nombre o un ID");
       return;
@@ -76,6 +80,8 @@ export default function AnimeView({ animeKey, titulo, color, visible = true }: P
 
       if (!res.ok || data.error) {
         setError(cfg.errorMsg);
+        setImagenes([]);
+        setImagenFrontal(null);
         return;
       }
 
@@ -91,8 +97,14 @@ export default function AnimeView({ animeKey, titulo, color, visible = true }: P
       if (data.imagen3) imgs.push(data.imagen3);
       if (data.imagen4) imgs.push(data.imagen4);
       setImagenes(imgs);
+
+      if (animeKey === "saintseiya") setDataSeiya(data);
+      if (animeKey === "hunterxhunter") setDataHunter(data);
+      if (animeKey === "onepiece") setDataOnePiece(data);
     } catch {
       setError("❌ Error de conexión");
+      setImagenes([]);
+      setImagenFrontal(null);
     }
   }
 
@@ -134,7 +146,11 @@ export default function AnimeView({ animeKey, titulo, color, visible = true }: P
               <Text style={[styles.contador, { color }]}>
                 {cfg.emoji} {imagenes.length} imágenes encontradas
               </Text>
-              <Button title="Ver Galería" onPress={() => setIsModalVisible(true)} color="#4682B4" />
+              <Button
+                title="Ver Galería"
+                onPress={() => setIsModalVisible(true)}
+                color="#4682B4"
+              />
             </>
           )}
         </Tarjeta>
@@ -154,6 +170,7 @@ export default function AnimeView({ animeKey, titulo, color, visible = true }: P
                 <Text style={styles.cerrarBtn}>✕</Text>
               </Pressable>
             </View>
+
             <FlatList
               horizontal
               showsHorizontalScrollIndicator={Platform.OS === "web"}
@@ -209,6 +226,12 @@ const styles = StyleSheet.create({
   title2: { color: "#fff", fontSize: 18, fontWeight: "bold" },
   cerrarBtn: { color: "#fff", fontSize: 24, fontWeight: "bold" },
   listContainer: { paddingVertical: 20, paddingHorizontal: 10 },
-  imageWrapper: { backgroundColor: "#fff", borderRadius: 15, padding: 5, marginHorizontal: 10, elevation: 5 },
+  imageWrapper: {
+    backgroundColor: "#fff",
+    borderRadius: 15,
+    padding: 5,
+    marginHorizontal: 10,
+    elevation: 5,
+  },
   imagen: { width: 150, height: 150 },
 });
