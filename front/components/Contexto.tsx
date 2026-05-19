@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useState } from "react";
+import { createContext, Dispatch, ReactNode, SetStateAction, useState } from "react";
 
 export interface AnimePersonalizado {
   nombre_clave: string;
@@ -15,22 +15,22 @@ export interface ConsultaAnimePersonalizado {
 
 interface ContextoType {
   usuarioLogueado: string | null;
-  setUsuarioLogueado: (u: string | null) => void;
+  setUsuarioLogueado: Dispatch<SetStateAction<string | null>>;
 
   dataSeiya: any;
-  setDataSeiya: (d: any) => void;
+  setDataSeiya: Dispatch<SetStateAction<any>>;
 
   dataHunter: any;
-  setDataHunter: (d: any) => void;
+  setDataHunter: Dispatch<SetStateAction<any>>;
 
   dataOnePiece: any;
-  setDataOnePiece: (d: any) => void;
+  setDataOnePiece: Dispatch<SetStateAction<any>>;
 
   animesPersonalizados: AnimePersonalizado[];
-  setAnimesPersonalizados: (a: AnimePersonalizado[]) => void;
+  setAnimesPersonalizados: Dispatch<SetStateAction<AnimePersonalizado[]>>;
 
   consultasPersonalizadas: ConsultaAnimePersonalizado[];
-  setConsultasPersonalizadas: (a: ConsultaAnimePersonalizado[]) => void;
+  setConsultasPersonalizadas: Dispatch<SetStateAction<ConsultaAnimePersonalizado[]>>;
 }
 
 export const ContextoConstante = createContext<ContextoType>({} as ContextoType);

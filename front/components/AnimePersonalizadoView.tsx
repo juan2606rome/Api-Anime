@@ -1,5 +1,5 @@
 import * as ImagePicker from "expo-image-picker";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -14,6 +14,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { ContextoConstante } from "./Contexto";
 import Tarjeta from "./Tarjeta";
 
 const API_URL = "https://api-animemicroservicio.onrender.com";
@@ -50,6 +51,8 @@ export default function AnimePersonalizadoView({
   visible = true,
   onEliminarAnime,
 }: Props) {
+  const { setConsultasPersonalizadas } = useContext(ContextoConstante);
+
   const [personajes, setPersonajes] = useState<Personaje[]>([]);
   const [loading, setLoading] = useState(false);
   const [texto, setTexto] = useState("");
@@ -83,7 +86,26 @@ export default function AnimePersonalizadoView({
 
   useEffect(() => {
     cargarPersonajes();
+    setTexto("");
+    setPersonajeActual(null);
+    setImagenes([]);
+    setModalGaleria(false);
+    setModalForm(false);
+    setError("");
   }, [animeKey]);
+
+  function guardarConsultaEnResumen(data: Personaje) {
+    setConsultasPersonalizadas((prev) => [
+      ...prev.filter((x) => x.nombre_clave !== animeKey),
+      {
+        nombre_clave: animeKey,
+        nombre_display: titulo,
+        emoji: "✨",
+        color: "#9C27B0",
+        data,
+      },
+    ]);
+  }
 
   async function buscarPersonaje() {
     const busqueda = texto.trim();
@@ -103,16 +125,23 @@ export default function AnimePersonalizadoView({
 
       if (!res.ok || data.error) {
         setError("❌ Personaje no encontrado");
+        setPersonajeActual(null);
+        setImagenes([]);
         return;
       }
 
       setPersonajeActual(data);
+
       const imgs: string[] = [data.imagen1, data.imagen2, data.imagen3, data.imagen4].filter(
         Boolean
       ) as string[];
       setImagenes(imgs);
+
+      guardarConsultaEnResumen(data);
     } catch {
       setError("❌ Error de conexión");
+      setPersonajeActual(null);
+      setImagenes([]);
     }
   }
 
@@ -202,6 +231,10 @@ export default function AnimePersonalizadoView({
         setPersonajeActual(null);
         setTexto("");
         await cargarPersonajes();
+
+        if (data.personaje) {
+          guardarConsultaEnResumen(data.personaje);
+        }
       } else {
         Alert.alert("Error", data.error ?? "No se pudo guardar");
       }
@@ -228,6 +261,7 @@ export default function AnimePersonalizadoView({
             if (data.ok) {
               setPersonajeActual(null);
               setTexto("");
+              setImagenes([]);
               await cargarPersonajes();
             } else {
               Alert.alert("Error", data.error ?? "No se pudo eliminar");
@@ -289,7 +323,12 @@ export default function AnimePersonalizadoView({
             )}
 
             <View style={{ gap: 8, marginTop: 12, width: "100%" }}>
-              {[personajeActual.imagen1, personajeActual.imagen2, personajeActual.imagen3, personajeActual.imagen4].filter(Boolean).length > 0 && (
+              {[
+                personajeActual.imagen1,
+                personajeActual.imagen2,
+                personajeActual.imagen3,
+                personajeActual.imagen4,
+              ].filter(Boolean).length > 0 && (
                 <Pressable
                   style={[styles.btn, { backgroundColor: "#4682B4" }]}
                   onPress={() => {
@@ -337,6 +376,11 @@ export default function AnimePersonalizadoView({
                 setPersonajeActual(p);
                 setTexto(p.nombre);
                 setError("");
+                const imgs: string[] = [p.imagen1, p.imagen2, p.imagen3, p.imagen4].filter(
+                  Boolean
+                ) as string[];
+                setImagenes(imgs);
+                guardarConsultaEnResumen(p);
               }}
             >
               {p.imagen1 ? (
@@ -365,7 +409,12 @@ export default function AnimePersonalizadoView({
         )}
       </ScrollView>
 
-      <Modal animationType="slide" transparent visible={modalGaleria} onRequestClose={() => setModalGaleria(false)}>
+      <Modal
+        animationType="slide"
+        transparent
+        visible={modalGaleria}
+        onRequestClose={() => setModalGaleria(false)}
+      >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={[styles.titleContainer, { backgroundColor: "#9C27B0" }]}>
@@ -391,11 +440,18 @@ export default function AnimePersonalizadoView({
         </View>
       </Modal>
 
-      <Modal animationType="slide" transparent visible={modalForm} onRequestClose={() => setModalForm(false)}>
+      <Modal
+        animationType="slide"
+        transparent
+        visible={modalForm}
+        onRequestClose={() => setModalForm(false)}
+      >
         <View style={styles.modalOverlayFull}>
           <View style={styles.formContent}>
             <View style={[styles.formHeader, { backgroundColor: editando ? "#F39C12" : "#27AE60" }]}>
-              <Text style={styles.title2}>{editando ? "✏️ Editar Personaje" : "✨ Nuevo Personaje"}</Text>
+              <Text style={styles.title2}>
+                {editando ? "✏️ Editar Personaje" : "✨ Nuevo Personaje"}
+              </Text>
               <Pressable onPress={() => setModalForm(false)}>
                 <Text style={styles.cerrarBtn}>✕</Text>
               </Pressable>
@@ -444,7 +500,11 @@ export default function AnimePersonalizadoView({
                 {[0, 1, 2, 3].map((i) => (
                   <Pressable key={i} style={styles.imagenSlot} onPress={() => seleccionarImagen(i)}>
                     {formImgs[i] ? (
-                      <Image source={{ uri: formImgs[i]! }} style={styles.imagenPreview} resizeMode="cover" />
+                      <Image
+                        source={{ uri: formImgs[i]! }}
+                        style={styles.imagenPreview}
+                        resizeMode="cover"
+                      />
                     ) : (
                       <Text style={styles.imagenSlotText}>+{"\n"}Foto {i + 1}</Text>
                     )}
@@ -552,7 +612,13 @@ const styles = StyleSheet.create({
   title2: { color: "#fff", fontSize: 18, fontWeight: "bold" },
   cerrarBtn: { color: "#fff", fontSize: 24, fontWeight: "bold" },
   listContainer: { paddingVertical: 20, paddingHorizontal: 10 },
-  imageWrapper: { backgroundColor: "#fff", borderRadius: 15, padding: 5, marginHorizontal: 10, elevation: 5 },
+  imageWrapper: {
+    backgroundColor: "#fff",
+    borderRadius: 15,
+    padding: 5,
+    marginHorizontal: 10,
+    elevation: 5,
+  },
   imagen: { width: 150, height: 150 },
   modalOverlayFull: { flex: 1, backgroundColor: "rgba(0,0,0,0.92)", justifyContent: "flex-end" },
   formContent: {
