@@ -37,11 +37,19 @@ const TABLAS_FIJAS = {
 };
 
 function sanitizarClave(nombre) {
-  return nombre
+  return String(nombre || "")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]/g, "");
+}
+
+function normalizarAnimeKey(valor) {
+  try {
+    return sanitizarClave(decodeURIComponent(String(valor || "")));
+  } catch {
+    return sanitizarClave(String(valor || ""));
+  }
 }
 
 async function inicializarBaseDatos() {
@@ -87,15 +95,18 @@ async function inicializarBaseDatos() {
 }
 
 async function getTabla(anime) {
-  if (TABLAS_FIJAS[anime]) return TABLAS_FIJAS[anime];
+  const animeKey = normalizarAnimeKey(anime);
+  if (!animeKey) return null;
+
+  if (TABLAS_FIJAS[animeKey]) return TABLAS_FIJAS[animeKey];
 
   const result = await client.query(
     "SELECT nombre_clave FROM animes_personalizados WHERE nombre_clave = $1",
-    [anime]
+    [animeKey]
   );
 
   if (result.rows[0]) {
-    return `custom_${anime}_personajes`;
+    return `custom_${animeKey}_personajes`;
   }
 
   return null;
@@ -145,12 +156,13 @@ const swaggerSpec = {
 };
 
 async function eliminarAnimeCompleto(animeKey) {
-  const tabla = `custom_${animeKey}_personajes`;
+  const clave = normalizarAnimeKey(animeKey);
+  const tabla = `custom_${clave}_personajes`;
 
   await client.query("BEGIN");
   try {
     await client.query(`DROP TABLE IF EXISTS "${tabla}"`);
-    await client.query("DELETE FROM animes_personalizados WHERE nombre_clave = $1", [animeKey]);
+    await client.query("DELETE FROM animes_personalizados WHERE nombre_clave = $1", [clave]);
     await client.query("COMMIT");
   } catch (err) {
     await client.query("ROLLBACK");
@@ -313,7 +325,11 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (method === "DELETE" && partes.length === 2 && partes[0] === "anime") {
-    const animeKey = partes[1];
+    const animeKey = normalizarAnimeKey(partes[1]);
+
+    if (!animeKey) {
+      return sendJSON(res, 400, { error: "Anime inválido" });
+    }
 
     if (TABLAS_FIJAS[animeKey]) {
       return sendJSON(res, 400, {
@@ -339,7 +355,7 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (pathname.startsWith("/anime/") && partes[0] === "anime") {
-    const animeKey = partes[1];
+    const animeKey = normalizarAnimeKey(partes[1]);
     const tabla = await getTabla(animeKey);
 
     if (!tabla) {
@@ -515,8 +531,15 @@ const server = http.createServer(async (req, res) => {
 
       const id = parseInt(partes[2], 10);
 
+      if (Number.isNaN(id)) {
+        return sendJSON(res, 400, { error: "ID inválido" });
+      }
+
       try {
-        const result = await client.query(`DELETE FROM "${tabla}" WHERE id = $1 RETURNING id`, [id]);
+        const result = await client.query(
+          `DELETE FROM "${tabla}" WHERE id = $1 RETURNING id`,
+          [id]
+        );
 
         if (!result.rows[0]) {
           return sendJSON(res, 404, { error: `Personaje con id ${id} no encontrado` });
