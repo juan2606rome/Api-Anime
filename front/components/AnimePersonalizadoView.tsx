@@ -38,12 +38,7 @@ interface Props {
   onEliminarAnime?: () => void;
 }
 
-const FORM_VACIO = {
-  nombre: "",
-  edad: "",
-  poder_tecnica: "",
-  nacionalidad: "",
-};
+const FORM_VACIO = { nombre: "", edad: "", poder_tecnica: "", nacionalidad: "" };
 
 export default function AnimePersonalizadoView({
   animeKey,
@@ -51,32 +46,42 @@ export default function AnimePersonalizadoView({
   visible = true,
   onEliminarAnime,
 }: Props) {
+  // ── Contexto ────────────────────────────────────────────────────────────────
   const { setConsultasPersonalizadas } = useContext(ContextoConstante);
 
-  const [personajes, setPersonajes] = useState<Personaje[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [texto, setTexto] = useState("");
-  const [personajeActual, setPersonajeActual] = useState<Personaje | null>(null);
-  const [imagenes, setImagenes] = useState<string[]>([]);
-  const [modalGaleria, setModalGaleria] = useState(false);
-  const [modalForm, setModalForm] = useState(false);
-  const [editando, setEditando] = useState(false);
-  const [form, setForm] = useState(FORM_VACIO);
-  const [formImgs, setFormImgs] = useState<(string | null)[]>([null, null, null, null]);
-  const [guardando, setGuardando] = useState(false);
-  const [error, setError] = useState("");
+  // ── Estado local ────────────────────────────────────────────────────────────
+  const [personajes,       setPersonajes]       = useState<Personaje[]>([]);
+  const [loading,          setLoading]          = useState(false);
+  const [texto,            setTexto]            = useState("");
+  const [personajeActual,  setPersonajeActual]  = useState<Personaje | null>(null);
+  const [imagenes,         setImagenes]         = useState<string[]>([]);
+  const [modalGaleria,     setModalGaleria]     = useState(false);
+  const [modalForm,        setModalForm]        = useState(false);
+  const [editando,         setEditando]         = useState(false);
+  const [form,             setForm]             = useState(FORM_VACIO);
+  const [formImgs,         setFormImgs]         = useState<(string | null)[]>([null,null,null,null]);
+  const [guardando,        setGuardando]        = useState(false);
+  const [eliminando,       setEliminando]       = useState(false);
+  const [error,            setError]            = useState("");
 
+  // Cuando cambia el anime, resetear todo el estado local
+  useEffect(() => {
+    setTexto("");
+    setPersonajeActual(null);
+    setImagenes([]);
+    setModalGaleria(false);
+    setModalForm(false);
+    setError("");
+    cargarPersonajes();
+  }, [animeKey]);
+
+  // ── Helpers ─────────────────────────────────────────────────────────────────
   async function cargarPersonajes() {
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/anime/${animeKey}`);
+      const res  = await fetch(`${API_URL}/anime/${animeKey}`);
       const data = await res.json();
-
-      if (Array.isArray(data)) {
-        setPersonajes(data);
-      } else {
-        setPersonajes([]);
-      }
+      setPersonajes(Array.isArray(data) ? data : []);
     } catch {
       setPersonajes([]);
     } finally {
@@ -84,43 +89,38 @@ export default function AnimePersonalizadoView({
     }
   }
 
-  useEffect(() => {
-    cargarPersonajes();
-    setTexto("");
-    setPersonajeActual(null);
-    setImagenes([]);
-    setModalGaleria(false);
-    setModalForm(false);
-    setError("");
-  }, [animeKey]);
-
-  function guardarConsultaEnResumen(data: Personaje) {
+  // Guarda la consulta actual en el contexto para mostrarla en el Resumen
+  function guardarEnResumen(p: Personaje) {
     setConsultasPersonalizadas((prev) => [
+      // reemplaza si ya había una consulta de este anime
       ...prev.filter((x) => x.nombre_clave !== animeKey),
       {
-        nombre_clave: animeKey,
+        nombre_clave:   animeKey,
         nombre_display: titulo,
-        emoji: "✨",
-        color: "#9C27B0",
-        data,
+        emoji:          "✨",
+        color:          "#9C27B0",
+        data:           p,
       },
     ]);
   }
 
+  function seleccionarPersonaje(p: Personaje) {
+    setPersonajeActual(p);
+    setTexto(p.nombre);
+    setError("");
+    const imgs = [p.imagen1, p.imagen2, p.imagen3, p.imagen4].filter(Boolean) as string[];
+    setImagenes(imgs);
+    guardarEnResumen(p);   // ← KEY: actualiza el Resumen al tocar de la lista
+  }
+
+  // ── Buscar ──────────────────────────────────────────────────────────────────
   async function buscarPersonaje() {
     const busqueda = texto.trim();
-
-    if (!busqueda) {
-      setError("Escribe un nombre o un ID");
-      return;
-    }
-
+    if (!busqueda) { setError("Escribe un nombre o un ID"); return; }
     setError("");
 
     try {
-      const res = await fetch(
-        `${API_URL}/anime/${animeKey}/${encodeURIComponent(busqueda.toLowerCase())}`
-      );
+      const res  = await fetch(`${API_URL}/anime/${animeKey}/${encodeURIComponent(busqueda.toLowerCase())}`);
       const data = await res.json();
 
       if (!res.ok || data.error) {
@@ -130,14 +130,10 @@ export default function AnimePersonalizadoView({
         return;
       }
 
+      const imgs = [data.imagen1, data.imagen2, data.imagen3, data.imagen4].filter(Boolean) as string[];
       setPersonajeActual(data);
-
-      const imgs: string[] = [data.imagen1, data.imagen2, data.imagen3, data.imagen4].filter(
-        Boolean
-      ) as string[];
       setImagenes(imgs);
-
-      guardarConsultaEnResumen(data);
+      guardarEnResumen(data);
     } catch {
       setError("❌ Error de conexión");
       setPersonajeActual(null);
@@ -145,9 +141,9 @@ export default function AnimePersonalizadoView({
     }
   }
 
+  // ── Imagen picker ────────────────────────────────────────────────────────────
   async function seleccionarImagen(index: number) {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-
     if (status !== "granted") {
       Alert.alert("Permiso denegado", "Necesitamos acceso a tu galería de fotos.");
       return;
@@ -155,20 +151,21 @@ export default function AnimePersonalizadoView({
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      base64: true,
-      quality: 0.3,
+      base64:     true,
+      quality:    0.3,
       allowsEditing: true,
-      aspect: [1, 1],
+      aspect:     [1, 1],
     });
 
     if (!result.canceled && result.assets[0]?.base64) {
-      const b64 = `data:image/jpeg;base64,${result.assets[0].base64}`;
+      const b64    = `data:image/jpeg;base64,${result.assets[0].base64}`;
       const nuevas = [...formImgs];
       nuevas[index] = b64;
       setFormImgs(nuevas);
     }
   }
 
+  // ── Formulario agregar / editar ──────────────────────────────────────────────
   function abrirFormAgregar() {
     setForm(FORM_VACIO);
     setFormImgs([null, null, null, null]);
@@ -178,10 +175,10 @@ export default function AnimePersonalizadoView({
 
   function abrirFormEditar(p: Personaje) {
     setForm({
-      nombre: p.nombre ?? "",
-      edad: p.edad ?? "",
+      nombre:        p.nombre        ?? "",
+      edad:          p.edad          ?? "",
       poder_tecnica: p.poder_tecnica ?? "",
-      nacionalidad: p.nacionalidad ?? "",
+      nacionalidad:  p.nacionalidad  ?? "",
     });
     setFormImgs([p.imagen1 ?? null, p.imagen2 ?? null, p.imagen3 ?? null, p.imagen4 ?? null]);
     setPersonajeActual(p);
@@ -190,39 +187,31 @@ export default function AnimePersonalizadoView({
   }
 
   async function guardarPersonaje() {
-    if (!form.nombre.trim()) {
-      Alert.alert("Error", "El nombre es obligatorio");
-      return;
-    }
-
+    if (!form.nombre.trim()) { Alert.alert("Error", "El nombre es obligatorio"); return; }
     setGuardando(true);
 
     const body: Record<string, any> = {
-      nombre: form.nombre.trim(),
-      edad: form.edad,
+      nombre:        form.nombre.trim(),
+      edad:          form.edad,
       poder_tecnica: form.poder_tecnica,
-      nacionalidad: form.nacionalidad,
+      nacionalidad:  form.nacionalidad,
     };
-
     if (formImgs[0]) body.imagen1 = formImgs[0];
     if (formImgs[1]) body.imagen2 = formImgs[1];
     if (formImgs[2]) body.imagen3 = formImgs[2];
     if (formImgs[3]) body.imagen4 = formImgs[3];
 
     try {
-      const url =
-        editando && personajeActual
-          ? `${API_URL}/anime/${animeKey}/${personajeActual.id}`
-          : `${API_URL}/anime/${animeKey}`;
-
+      const urlFetch = editando && personajeActual
+        ? `${API_URL}/anime/${animeKey}/${personajeActual.id}`
+        : `${API_URL}/anime/${animeKey}`;
       const method = editando ? "PUT" : "POST";
 
-      const res = await fetch(url, {
+      const res  = await fetch(urlFetch, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body:    JSON.stringify(body),
       });
-
       const data = await res.json();
 
       if (data.ok) {
@@ -231,89 +220,104 @@ export default function AnimePersonalizadoView({
         setPersonajeActual(null);
         setTexto("");
         await cargarPersonajes();
-
-        if (data.personaje) {
-          guardarConsultaEnResumen(data.personaje);
-        }
+        if (data.personaje) guardarEnResumen(data.personaje);
       } else {
-        Alert.alert("Error", data.error ?? "No se pudo guardar");
+        Alert.alert("Error al guardar", data.error ?? "No se pudo guardar");
       }
-    } catch {
-      Alert.alert("Error", "Error de conexión");
+    } catch (err) {
+      Alert.alert("Error", "Error de conexión al guardar");
     } finally {
       setGuardando(false);
     }
   }
 
-  async function eliminarPersonaje(id: number) {
-    Alert.alert("Eliminar personaje", "¿Seguro que quieres eliminar este personaje?", [
-      { text: "Cancelar", style: "cancel" },
-      {
-        text: "Eliminar",
-        style: "destructive",
-        onPress: async () => {
-          try {
-            const res = await fetch(`${API_URL}/anime/${animeKey}/${id}`, {
-              method: "DELETE",
-            });
-            const data = await res.json();
-
-            if (data.ok) {
-              setPersonajeActual(null);
-              setTexto("");
-              setImagenes([]);
-              await cargarPersonajes();
-            } else {
-              Alert.alert("Error", data.error ?? "No se pudo eliminar");
-            }
-          } catch {
-            Alert.alert("Error", "Error de conexión");
-          }
+  // ── ELIMINAR PERSONAJE ───────────────────────────────────────────────────────
+  // La función muestra la confirmación PRIMERO y solo llama al API cuando el
+  // usuario confirma. Se usa setEliminando para bloquear doble-tap.
+  async function confirmarEliminarPersonaje(id: number) {
+    Alert.alert(
+      "🗑️  Eliminar personaje",
+      "¿Seguro que quieres eliminar este personaje? Esta acción no se puede deshacer.",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text:  "Sí, eliminar",
+          style: "destructive",
+          onPress: () => ejecutarEliminarPersonaje(id),
         },
-      },
-    ]);
+      ]
+    );
   }
 
+  async function ejecutarEliminarPersonaje(id: number) {
+    setEliminando(true);
+    try {
+      const res  = await fetch(`${API_URL}/anime/${animeKey}/${id}`, { method: "DELETE" });
+      const data = await res.json();
+
+      if (data.ok) {
+        // Limpiar estado local
+        setPersonajeActual(null);
+        setTexto("");
+        setImagenes([]);
+        // Quitar del resumen si era el personaje guardado
+        setConsultasPersonalizadas((prev) => prev.filter((x) => x.nombre_clave !== animeKey));
+        await cargarPersonajes();
+        Alert.alert("✅ Eliminado", "El personaje fue eliminado correctamente.");
+      } else {
+        Alert.alert("Error al eliminar", data.error ?? "No se pudo eliminar el personaje.");
+      }
+    } catch {
+      Alert.alert("Error", "Error de conexión al intentar eliminar.");
+    } finally {
+      setEliminando(false);
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // RENDER
+  // ─────────────────────────────────────────────────────────────────────────────
   return (
     <View style={[styles.container, !visible && styles.hidden]}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>✨ {titulo}</Text>
+        <Text style={styles.title}>✨  {titulo}</Text>
 
+        {/* Buscador */}
         <TextInput
           style={styles.input}
           placeholder="Buscar por nombre o ID..."
           placeholderTextColor="#999"
           value={texto}
           onChangeText={setTexto}
+          onSubmitEditing={buscarPersonaje}
+          returnKeyType="search"
         />
 
+        {/* Botones principales */}
         <View style={styles.botonesRow}>
           <Pressable style={[styles.btn, { backgroundColor: "#9C27B0" }]} onPress={buscarPersonaje}>
             <Text style={styles.btnText}>🔍 Buscar</Text>
           </Pressable>
-
           <Pressable style={[styles.btn, { backgroundColor: "#27AE60" }]} onPress={abrirFormAgregar}>
-            <Text style={styles.btnText}>+ Agregar Personaje</Text>
+            <Text style={styles.btnText}>＋ Agregar</Text>
           </Pressable>
-
-          {onEliminarAnime ? (
-            <Pressable
-              style={[styles.btn, { backgroundColor: "#E74C3C" }]}
-              onPress={onEliminarAnime}
-            >
-              <Text style={styles.btnText}>🗑 Eliminar Anime</Text>
+          {/* Eliminar anime — solo visible si viene el callback desde el padre */}
+          {onEliminarAnime && (
+            <Pressable style={[styles.btn, { backgroundColor: "#C0392B" }]} onPress={onEliminarAnime}>
+              <Text style={styles.btnText}>🗑️ Eliminar Anime</Text>
             </Pressable>
-          ) : null}
+          )}
         </View>
 
         {error !== "" && <Text style={styles.textoError}>{error}</Text>}
 
+        {/* Personaje seleccionado */}
         {personajeActual && (
           <Tarjeta>
-            <Text style={styles.text}>Nombre: {personajeActual.nombre}</Text>
-            <Text style={styles.text}>Edad: {personajeActual.edad}</Text>
-            <Text style={styles.text}>Poder/Técnica: {personajeActual.poder_tecnica}</Text>
-            <Text style={styles.text}>Nacionalidad: {personajeActual.nacionalidad}</Text>
+            <Text style={styles.text}><Text style={styles.label}>Nombre: </Text>{personajeActual.nombre}</Text>
+            <Text style={styles.text}><Text style={styles.label}>Edad: </Text>{personajeActual.edad}</Text>
+            <Text style={styles.text}><Text style={styles.label}>Poder/Técnica: </Text>{personajeActual.poder_tecnica}</Text>
+            <Text style={styles.text}><Text style={styles.label}>Nacionalidad: </Text>{personajeActual.nacionalidad}</Text>
 
             {personajeActual.imagen1 && (
               <Image
@@ -322,93 +326,76 @@ export default function AnimePersonalizadoView({
               />
             )}
 
-            <View style={{ gap: 8, marginTop: 12, width: "100%" }}>
-              {[
-                personajeActual.imagen1,
-                personajeActual.imagen2,
-                personajeActual.imagen3,
-                personajeActual.imagen4,
-              ].filter(Boolean).length > 0 && (
+            <View style={{ gap: 8, marginTop: 14, width: "100%" }}>
+              {imagenes.length > 0 && (
                 <Pressable
                   style={[styles.btn, { backgroundColor: "#4682B4" }]}
-                  onPress={() => {
-                    const imgs = [
-                      personajeActual.imagen1,
-                      personajeActual.imagen2,
-                      personajeActual.imagen3,
-                      personajeActual.imagen4,
-                    ].filter(Boolean) as string[];
-                    setImagenes(imgs);
-                    setModalGaleria(true);
-                  }}
+                  onPress={() => setModalGaleria(true)}
                 >
-                  <Text style={styles.btnText}>🖼️ Ver Galería</Text>
+                  <Text style={styles.btnText}>🖼️  Ver Galería ({imagenes.length})</Text>
                 </Pressable>
               )}
-
               <Pressable
                 style={[styles.btn, { backgroundColor: "#F39C12" }]}
                 onPress={() => abrirFormEditar(personajeActual)}
               >
-                <Text style={styles.btnText}>✏️ Editar</Text>
+                <Text style={styles.btnText}>✏️  Editar</Text>
               </Pressable>
 
-              <Pressable
-                style={[styles.btn, { backgroundColor: "#E74C3C" }]}
-                onPress={() => eliminarPersonaje(personajeActual.id)}
-              >
-                <Text style={styles.btnText}>🗑️ Eliminar</Text>
-              </Pressable>
+              {/* BOTÓN ELIMINAR PERSONAJE — fuera de cualquier otro Pressable */}
+              {eliminando ? (
+                <ActivityIndicator color="#E74C3C" style={{ marginTop: 4 }} />
+              ) : (
+                <Pressable
+                  style={[styles.btn, { backgroundColor: "#E74C3C" }]}
+                  onPress={() => confirmarEliminarPersonaje(personajeActual.id)}
+                >
+                  <Text style={styles.btnText}>🗑️  Eliminar Personaje</Text>
+                </Pressable>
+              )}
             </View>
           </Tarjeta>
         )}
 
-        <Text style={styles.listaTitle}>Todos los personajes ({personajes.length})</Text>
+        {/* Lista de todos los personajes */}
+        <Text style={styles.listaTitle}>
+          Todos los personajes ({personajes.length})
+        </Text>
 
         {loading ? (
           <ActivityIndicator color="#9C27B0" size="large" style={{ marginTop: 20 }} />
+        ) : personajes.length === 0 ? (
+          <Text style={styles.listaVacia}>
+            No hay personajes aún. ¡Agrega el primero con el botón de arriba!
+          </Text>
         ) : (
           personajes.map((p) => (
+            // Cada fila es un Pressable independiente — no anidado
             <Pressable
               key={p.id}
               style={styles.personajeItem}
-              onPress={() => {
-                setPersonajeActual(p);
-                setTexto(p.nombre);
-                setError("");
-                const imgs: string[] = [p.imagen1, p.imagen2, p.imagen3, p.imagen4].filter(
-                  Boolean
-                ) as string[];
-                setImagenes(imgs);
-                guardarConsultaEnResumen(p);
-              }}
+              onPress={() => seleccionarPersonaje(p)}
             >
               {p.imagen1 ? (
                 <Image source={{ uri: p.imagen1 }} style={styles.personajeImg} />
               ) : (
-                <View
-                  style={[
-                    styles.personajeImg,
-                    { backgroundColor: "#333", justifyContent: "center", alignItems: "center" },
-                  ]}
-                >
-                  <Text style={{ fontSize: 20 }}>✨</Text>
+                <View style={[styles.personajeImg, styles.personajeImgPlaceholder]}>
+                  <Text style={{ fontSize: 22 }}>✨</Text>
                 </View>
               )}
-
               <View style={{ flex: 1 }}>
                 <Text style={styles.personajeNombre}>{p.nombre}</Text>
-                <Text style={styles.personajeInfo}>
+                <Text style={styles.personajeInfo} numberOfLines={1}>
                   {p.poder_tecnica || "Sin técnica registrada"}
                 </Text>
               </View>
-
-              <Text style={{ color: "#9C27B0", fontSize: 18 }}>▶</Text>
+              <Text style={{ color: "#9C27B0", fontSize: 20 }}>›</Text>
             </Pressable>
           ))
         )}
       </ScrollView>
 
+      {/* ════ MODAL GALERÍA ══════════════════════════════════════════════════ */}
       <Modal
         animationType="slide"
         transparent
@@ -417,22 +404,21 @@ export default function AnimePersonalizadoView({
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <View style={[styles.titleContainer, { backgroundColor: "#9C27B0" }]}>
-              <Text style={styles.title2}>Galería de imágenes</Text>
+            <View style={[styles.modalHeader, { backgroundColor: "#9C27B0" }]}>
+              <Text style={styles.modalTitle}>Galería — {titulo}</Text>
               <Pressable onPress={() => setModalGaleria(false)}>
                 <Text style={styles.cerrarBtn}>✕</Text>
               </Pressable>
             </View>
-
             <FlatList
               horizontal
               showsHorizontalScrollIndicator={Platform.OS === "web"}
               data={imagenes}
               keyExtractor={(_, i) => i.toString()}
-              contentContainerStyle={styles.listContainer}
+              contentContainerStyle={styles.galeriaList}
               renderItem={({ item }) => (
-                <View style={styles.imageWrapper}>
-                  <Image source={{ uri: item }} style={styles.imagen} resizeMode="contain" />
+                <View style={styles.galeriaItem}>
+                  <Image source={{ uri: item }} style={styles.galeriaImg} resizeMode="contain" />
                 </View>
               )}
             />
@@ -440,24 +426,25 @@ export default function AnimePersonalizadoView({
         </View>
       </Modal>
 
+      {/* ════ MODAL FORMULARIO AGREGAR / EDITAR ═════════════════════════════ */}
       <Modal
         animationType="slide"
         transparent
         visible={modalForm}
         onRequestClose={() => setModalForm(false)}
       >
-        <View style={styles.modalOverlayFull}>
+        <View style={styles.formOverlay}>
           <View style={styles.formContent}>
-            <View style={[styles.formHeader, { backgroundColor: editando ? "#F39C12" : "#27AE60" }]}>
-              <Text style={styles.title2}>
-                {editando ? "✏️ Editar Personaje" : "✨ Nuevo Personaje"}
+            <View style={[styles.modalHeader, { backgroundColor: editando ? "#F39C12" : "#27AE60" }]}>
+              <Text style={styles.modalTitle}>
+                {editando ? "✏️  Editar Personaje" : "✨  Nuevo Personaje"}
               </Text>
               <Pressable onPress={() => setModalForm(false)}>
                 <Text style={styles.cerrarBtn}>✕</Text>
               </Pressable>
             </View>
 
-            <ScrollView contentContainerStyle={{ padding: 20 }}>
+            <ScrollView contentContainerStyle={{ padding: 20 }} showsVerticalScrollIndicator={false}>
               <Text style={styles.formLabel}>Nombre *</Text>
               <TextInput
                 style={styles.formInput}
@@ -473,8 +460,8 @@ export default function AnimePersonalizadoView({
                 placeholder="Edad"
                 placeholderTextColor="#666"
                 value={form.edad}
-                onChangeText={(v) => setForm({ ...form, edad: v })}
                 keyboardType="numeric"
+                onChangeText={(v) => setForm({ ...form, edad: v })}
               />
 
               <Text style={styles.formLabel}>Poder / Técnica</Text>
@@ -495,7 +482,7 @@ export default function AnimePersonalizadoView({
                 onChangeText={(v) => setForm({ ...form, nacionalidad: v })}
               />
 
-              <Text style={styles.formLabel}>Imágenes (toca para seleccionar, hasta 4):</Text>
+              <Text style={styles.formLabel}>Imágenes (toca para agregar, hasta 4):</Text>
               <View style={styles.imagenesGrid}>
                 {[0, 1, 2, 3].map((i) => (
                   <Pressable key={i} style={styles.imagenSlot} onPress={() => seleccionarImagen(i)}>
@@ -506,7 +493,7 @@ export default function AnimePersonalizadoView({
                         resizeMode="cover"
                       />
                     ) : (
-                      <Text style={styles.imagenSlotText}>+{"\n"}Foto {i + 1}</Text>
+                      <Text style={styles.imagenSlotText}>＋{"\n"}Foto {i + 1}</Text>
                     )}
                   </Pressable>
                 ))}
@@ -525,9 +512,8 @@ export default function AnimePersonalizadoView({
                         {editando ? "Actualizar Personaje" : "Guardar Personaje"}
                       </Text>
                     </Pressable>
-
                     <Pressable
-                      style={[styles.formBtn, { backgroundColor: "#555" }]}
+                      style={[styles.formBtn, { backgroundColor: "#444" }]}
                       onPress={() => setModalForm(false)}
                     >
                       <Text style={styles.formBtnText}>Cancelar</Text>
@@ -543,128 +529,96 @@ export default function AnimePersonalizadoView({
   );
 }
 
+// ═════════════════════════════════════════════════════════════════════════════
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0a0a1a" },
-  hidden: { display: "none" },
-  scrollContent: { padding: 20, paddingBottom: 40 },
+  container:    { flex: 1, backgroundColor: "#0a0a1a" },
+  hidden:       { display: "none" },
+  scrollContent:{ padding: 20, paddingBottom: 50 },
+
   title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#9C27B0",
-    marginBottom: 20,
-    textAlign: "center",
+    fontSize: 24, fontWeight: "bold",
+    color: "#9C27B0", marginBottom: 20, textAlign: "center",
   },
   input: {
-    width: "100%",
-    borderWidth: 1,
-    borderColor: "#9C27B0",
-    borderRadius: 10,
-    padding: 10,
-    marginBottom: 12,
-    backgroundColor: "#fff",
+    width: "100%", borderWidth: 1, borderColor: "#9C27B0",
+    borderRadius: 10, padding: 12, marginBottom: 12,
+    backgroundColor: "#fff", fontSize: 15,
   },
   botonesRow: {
-    flexDirection: "row",
-    gap: 10,
-    marginBottom: 15,
-    flexWrap: "wrap",
+    flexDirection: "row", gap: 8, marginBottom: 15, flexWrap: "wrap",
   },
   btn: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-    alignItems: "center",
+    paddingVertical: 10, paddingHorizontal: 14,
+    borderRadius: 8, alignItems: "center",
   },
   btnText: { color: "#fff", fontWeight: "bold", fontSize: 13 },
+
+  label:      { fontWeight: "bold" },
   textoError: { color: "#ff4d4d", fontWeight: "bold", marginBottom: 10, textAlign: "center" },
-  text: { marginTop: 10, fontSize: 16, color: "#000" },
-  listaTitle: { color: "#777", marginTop: 25, marginBottom: 10, fontSize: 13 },
+  text:       { marginTop: 10, fontSize: 15, color: "#111" },
+
+  listaTitle: { color: "#666", marginTop: 25, marginBottom: 10, fontSize: 13 },
+  listaVacia: { color: "#555", fontStyle: "italic", textAlign: "center", marginTop: 20, padding: 10 },
+
   personajeItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#1a1a1a",
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: "#333",
-    gap: 12,
+    flexDirection: "row", alignItems: "center",
+    backgroundColor: "#141420", borderRadius: 12,
+    padding: 12, marginBottom: 8,
+    borderWidth: 1, borderColor: "#2a2a3a", gap: 12,
   },
-  personajeImg: { width: 52, height: 52, borderRadius: 8 },
+  personajeImg: { width: 52, height: 52, borderRadius: 10 },
+  personajeImgPlaceholder: {
+    backgroundColor: "#2a2a3a", justifyContent: "center", alignItems: "center",
+  },
   personajeNombre: { color: "#fff", fontWeight: "bold", fontSize: 15 },
-  personajeInfo: { color: "#777", fontSize: 12, marginTop: 2 },
-  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.7)", justifyContent: "flex-end" },
+  personajeInfo:   { color: "#666", fontSize: 12, marginTop: 2 },
+
+  // Modales
+  modalOverlay: {
+    flex: 1, backgroundColor: "rgba(0,0,0,0.75)", justifyContent: "flex-end",
+  },
   modalContent: {
-    height: "35%",
-    backgroundColor: "#1c1c1c",
-    borderTopRightRadius: 18,
-    borderTopLeftRadius: 18,
+    height: "38%", backgroundColor: "#1a1a2e",
+    borderTopRightRadius: 20, borderTopLeftRadius: 20,
   },
-  titleContainer: {
-    height: 50,
-    borderTopRightRadius: 18,
-    borderTopLeftRadius: 18,
+  modalHeader: {
+    height: 52, borderTopRightRadius: 20, borderTopLeftRadius: 20,
     paddingHorizontal: 20,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
+    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
   },
-  title2: { color: "#fff", fontSize: 18, fontWeight: "bold" },
-  cerrarBtn: { color: "#fff", fontSize: 24, fontWeight: "bold" },
-  listContainer: { paddingVertical: 20, paddingHorizontal: 10 },
-  imageWrapper: {
-    backgroundColor: "#fff",
-    borderRadius: 15,
-    padding: 5,
-    marginHorizontal: 10,
-    elevation: 5,
+  modalTitle: { color: "#fff", fontSize: 16, fontWeight: "bold" },
+  cerrarBtn:  { color: "#fff", fontSize: 24, fontWeight: "bold" },
+
+  galeriaList: { paddingVertical: 18, paddingHorizontal: 10 },
+  galeriaItem: {
+    backgroundColor: "#fff", borderRadius: 14,
+    padding: 5, marginHorizontal: 8, elevation: 4,
   },
-  imagen: { width: 150, height: 150 },
-  modalOverlayFull: { flex: 1, backgroundColor: "rgba(0,0,0,0.92)", justifyContent: "flex-end" },
+  galeriaImg: { width: 155, height: 155 },
+
+  // Formulario
+  formOverlay: {
+    flex: 1, backgroundColor: "rgba(0,0,0,0.92)", justifyContent: "flex-end",
+  },
   formContent: {
-    height: "92%",
-    backgroundColor: "#1a1a1a",
-    borderTopRightRadius: 20,
-    borderTopLeftRadius: 20,
+    height: "94%", backgroundColor: "#111120",
+    borderTopRightRadius: 22, borderTopLeftRadius: 22,
   },
-  formHeader: {
-    height: 55,
-    borderTopRightRadius: 20,
-    borderTopLeftRadius: 20,
-    paddingHorizontal: 20,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  formLabel: { color: "#aaa", fontSize: 13, marginBottom: 5 },
+  formLabel: { color: "#888", fontSize: 13, marginBottom: 5, marginTop: 2 },
   formInput: {
-    borderWidth: 1,
-    borderColor: "#333",
-    borderRadius: 10,
-    padding: 12,
-    color: "#fff",
-    backgroundColor: "#111",
-    marginBottom: 14,
-    fontSize: 15,
+    borderWidth: 1, borderColor: "#2a2a3a", borderRadius: 10,
+    padding: 12, color: "#fff", backgroundColor: "#0d0d1a",
+    marginBottom: 14, fontSize: 15,
   },
-  imagenesGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-  },
+  imagenesGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   imagenSlot: {
-    width: "47%",
-    height: 120,
-    backgroundColor: "#222",
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "#444",
-    borderStyle: "dashed",
-    justifyContent: "center",
-    alignItems: "center",
+    width: "47%", height: 120,
+    backgroundColor: "#1a1a2e", borderRadius: 10,
+    borderWidth: 1, borderColor: "#333", borderStyle: "dashed",
+    justifyContent: "center", alignItems: "center",
   },
-  imagenSlotText: { color: "#666", textAlign: "center", fontSize: 13 },
-  imagenPreview: { width: "100%", height: "100%", borderRadius: 10 },
-  formBtn: { padding: 14, borderRadius: 10, alignItems: "center" },
-  formBtnText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
+  imagenSlotText:  { color: "#555", textAlign: "center", fontSize: 13 },
+  imagenPreview:   { width: "100%", height: "100%", borderRadius: 10 },
+  formBtn:         { padding: 14, borderRadius: 10, alignItems: "center" },
+  formBtnText:     { color: "#fff", fontWeight: "bold", fontSize: 16 },
 });
