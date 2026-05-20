@@ -50,19 +50,19 @@ export default function AnimePersonalizadoView({
   const { setConsultasPersonalizadas } = useContext(ContextoConstante);
 
   // ── Estado local ────────────────────────────────────────────────────────────
-  const [personajes,       setPersonajes]       = useState<Personaje[]>([]);
-  const [loading,          setLoading]          = useState(false);
-  const [texto,            setTexto]            = useState("");
-  const [personajeActual,  setPersonajeActual]  = useState<Personaje | null>(null);
-  const [imagenes,         setImagenes]         = useState<string[]>([]);
-  const [modalGaleria,     setModalGaleria]     = useState(false);
-  const [modalForm,        setModalForm]        = useState(false);
-  const [editando,         setEditando]         = useState(false);
-  const [form,             setForm]             = useState(FORM_VACIO);
-  const [formImgs,         setFormImgs]         = useState<(string | null)[]>([null,null,null,null]);
-  const [guardando,        setGuardando]        = useState(false);
-  const [eliminando,       setEliminando]       = useState(false);
-  const [error,            setError]            = useState("");
+  const [personajes, setPersonajes] = useState<Personaje[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [texto, setTexto] = useState("");
+  const [personajeActual, setPersonajeActual] = useState<Personaje | null>(null);
+  const [imagenes, setImagenes] = useState<string[]>([]);
+  const [modalGaleria, setModalGaleria] = useState(false);
+  const [modalForm, setModalForm] = useState(false);
+  const [editando, setEditando] = useState(false);
+  const [form, setForm] = useState(FORM_VACIO);
+  const [formImgs, setFormImgs] = useState<(string | null)[]>([null, null, null, null]);
+  const [guardando, setGuardando] = useState(false);
+  const [eliminando, setEliminando] = useState(false);
+  const [error, setError] = useState("");
 
   // Cuando cambia el anime, resetear todo el estado local
   useEffect(() => {
@@ -79,7 +79,7 @@ export default function AnimePersonalizadoView({
   async function cargarPersonajes() {
     setLoading(true);
     try {
-      const res  = await fetch(`${API_URL}/anime/${animeKey}`);
+      const res = await fetch(`${API_URL}/anime/${animeKey}`);
       const data = await res.json();
       setPersonajes(Array.isArray(data) ? data : []);
     } catch {
@@ -95,11 +95,11 @@ export default function AnimePersonalizadoView({
       // reemplaza si ya había una consulta de este anime
       ...prev.filter((x) => x.nombre_clave !== animeKey),
       {
-        nombre_clave:   animeKey,
+        nombre_clave: animeKey,
         nombre_display: titulo,
-        emoji:          "✨",
-        color:          "#9C27B0",
-        data:           p,
+        emoji: "✨",
+        color: "#9C27B0",
+        data: p,
       },
     ]);
   }
@@ -120,7 +120,7 @@ export default function AnimePersonalizadoView({
     setError("");
 
     try {
-      const res  = await fetch(`${API_URL}/anime/${animeKey}/${encodeURIComponent(busqueda.toLowerCase())}`);
+      const res = await fetch(`${API_URL}/anime/${animeKey}/${encodeURIComponent(busqueda.toLowerCase())}`);
       const data = await res.json();
 
       if (!res.ok || data.error) {
@@ -151,14 +151,14 @@ export default function AnimePersonalizadoView({
 
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      base64:     true,
-      quality:    0.3,
+      base64: true,
+      quality: 0.3,
       allowsEditing: true,
-      aspect:     [1, 1],
+      aspect: [1, 1],
     });
 
     if (!result.canceled && result.assets[0]?.base64) {
-      const b64    = `data:image/jpeg;base64,${result.assets[0].base64}`;
+      const b64 = `data:image/jpeg;base64,${result.assets[0].base64}`;
       const nuevas = [...formImgs];
       nuevas[index] = b64;
       setFormImgs(nuevas);
@@ -175,10 +175,10 @@ export default function AnimePersonalizadoView({
 
   function abrirFormEditar(p: Personaje) {
     setForm({
-      nombre:        p.nombre        ?? "",
-      edad:          p.edad          ?? "",
+      nombre: p.nombre ?? "",
+      edad: p.edad ?? "",
       poder_tecnica: p.poder_tecnica ?? "",
-      nacionalidad:  p.nacionalidad  ?? "",
+      nacionalidad: p.nacionalidad ?? "",
     });
     setFormImgs([p.imagen1 ?? null, p.imagen2 ?? null, p.imagen3 ?? null, p.imagen4 ?? null]);
     setPersonajeActual(p);
@@ -191,10 +191,10 @@ export default function AnimePersonalizadoView({
     setGuardando(true);
 
     const body: Record<string, any> = {
-      nombre:        form.nombre.trim(),
-      edad:          form.edad,
+      nombre: form.nombre.trim(),
+      edad: form.edad,
       poder_tecnica: form.poder_tecnica,
-      nacionalidad:  form.nacionalidad,
+      nacionalidad: form.nacionalidad,
     };
     if (formImgs[0]) body.imagen1 = formImgs[0];
     if (formImgs[1]) body.imagen2 = formImgs[1];
@@ -207,10 +207,10 @@ export default function AnimePersonalizadoView({
         : `${API_URL}/anime/${animeKey}`;
       const method = editando ? "PUT" : "POST";
 
-      const res  = await fetch(urlFetch, {
+      const res = await fetch(urlFetch, {
         method,
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify(body),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
 
@@ -232,8 +232,6 @@ export default function AnimePersonalizadoView({
   }
 
   // ── ELIMINAR PERSONAJE ───────────────────────────────────────────────────────
-  // La función muestra la confirmación PRIMERO y solo llama al API cuando el
-  // usuario confirma. Se usa setEliminando para bloquear doble-tap.
   async function confirmarEliminarPersonaje(id: number) {
     Alert.alert(
       "🗑️  Eliminar personaje",
@@ -241,7 +239,7 @@ export default function AnimePersonalizadoView({
       [
         { text: "Cancelar", style: "cancel" },
         {
-          text:  "Sí, eliminar",
+          text: "Sí, eliminar",
           style: "destructive",
           onPress: () => ejecutarEliminarPersonaje(id),
         },
@@ -252,15 +250,13 @@ export default function AnimePersonalizadoView({
   async function ejecutarEliminarPersonaje(id: number) {
     setEliminando(true);
     try {
-      const res  = await fetch(`${API_URL}/anime/${animeKey}/${id}`, { method: "DELETE" });
+      const res = await fetch(`${API_URL}/anime/${animeKey}/${id}`, { method: "DELETE" });
       const data = await res.json();
 
       if (data.ok) {
-        // Limpiar estado local
         setPersonajeActual(null);
         setTexto("");
         setImagenes([]);
-        // Quitar del resumen si era el personaje guardado
         setConsultasPersonalizadas((prev) => prev.filter((x) => x.nombre_clave !== animeKey));
         await cargarPersonajes();
         Alert.alert("✅ Eliminado", "El personaje fue eliminado correctamente.");
@@ -301,7 +297,6 @@ export default function AnimePersonalizadoView({
           <Pressable style={[styles.btn, { backgroundColor: "#27AE60" }]} onPress={abrirFormAgregar}>
             <Text style={styles.btnText}>＋ Agregar</Text>
           </Pressable>
-          {/* Eliminar anime — solo visible si viene el callback desde el padre */}
           {onEliminarAnime && (
             <Pressable style={[styles.btn, { backgroundColor: "#C0392B" }]} onPress={onEliminarAnime}>
               <Text style={styles.btnText}>🗑️ Eliminar Anime</Text>
@@ -342,7 +337,7 @@ export default function AnimePersonalizadoView({
                 <Text style={styles.btnText}>✏️  Editar</Text>
               </Pressable>
 
-              {/* BOTÓN ELIMINAR PERSONAJE — fuera de cualquier otro Pressable */}
+              {/* BOTÓN ELIMINAR PERSONAJE */}
               {eliminando ? (
                 <ActivityIndicator color="#E74C3C" style={{ marginTop: 4 }} />
               ) : (
@@ -370,7 +365,6 @@ export default function AnimePersonalizadoView({
           </Text>
         ) : (
           personajes.map((p) => (
-            // Cada fila es un Pressable independiente — no anidado
             <Pressable
               key={p.id}
               style={styles.personajeItem}
@@ -529,7 +523,6 @@ export default function AnimePersonalizadoView({
   );
 }
 
-// ═════════════════════════════════════════════════════════════════════════════
 const styles = StyleSheet.create({
   container:    { flex: 1, backgroundColor: "#0a0a1a" },
   hidden:       { display: "none" },
@@ -573,7 +566,6 @@ const styles = StyleSheet.create({
   personajeNombre: { color: "#fff", fontWeight: "bold", fontSize: 15 },
   personajeInfo:   { color: "#666", fontSize: 12, marginTop: 2 },
 
-  // Modales
   modalOverlay: {
     flex: 1, backgroundColor: "rgba(0,0,0,0.75)", justifyContent: "flex-end",
   },
@@ -596,7 +588,6 @@ const styles = StyleSheet.create({
   },
   galeriaImg: { width: 155, height: 155 },
 
-  // Formulario
   formOverlay: {
     flex: 1, backgroundColor: "rgba(0,0,0,0.92)", justifyContent: "flex-end",
   },

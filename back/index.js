@@ -303,10 +303,14 @@ const server = http.createServer(async (req, res) => {
     return res.end();
   }
 
-  const parsedUrl = url.parse(req.url, true);
+  const baseURL = `http://${req.headers.host}`;
+  const parsedUrl = new URL(req.url, baseURL);
   const pathname  = parsedUrl.pathname;
   const method    = req.method;
   const partes    = pathname.split("/").filter(Boolean);
+
+  // Agrega esta línea para ver TODO lo que le llega a Render:
+  console.log(`📥 Petición entrando: [${method}] ${pathname}`);
 
   // ── Raíz ──────────────────────────────────────────────────────────────────
   if (method === "GET" && pathname === "/") {
