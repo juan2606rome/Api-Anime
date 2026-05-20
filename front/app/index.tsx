@@ -229,16 +229,12 @@ export default function Main() {
   }
 
   function pedirConfirmacionEliminarAnime(animeKey: string, animeDisplay: string) {
-    setModalSelector(false);
-
-    setTimeout(() => {
-      mostrarConfirm(
-        "⚠️ Eliminar anime",
-        `¿Seguro que deseas eliminar "${animeDisplay}"?\n\nSe borrarán TODOS sus personajes e imágenes. Esta acción no se puede deshacer.`,
-        () => ejecutarEliminarAnime(animeKey, animeDisplay),
-        "Sí, eliminar todo"
-      );
-    }, 220);
+    mostrarConfirm(
+      "⚠️ Eliminar anime",
+      `¿Seguro que deseas eliminar "${animeDisplay}"?\n\nSe borrarán TODOS sus personajes e imágenes. Esta acción no se puede deshacer.`,
+      () => ejecutarEliminarAnime(animeKey, animeDisplay),
+      "Sí, eliminar todo"
+    );
   }
 
   async function ejecutarEliminarAnime(animeKey: string, animeDisplay: string) {
@@ -352,7 +348,10 @@ export default function Main() {
           visible={dialogo.visible}
           onRequestClose={cerrarDialogo}
         >
-          <Pressable style={styles.dialogOverlay} onPress={dialogo.tipo === "info" ? cerrarDialogo : undefined}>
+          <Pressable
+            style={styles.dialogOverlay}
+            onPress={dialogo.tipo === "info" ? cerrarDialogo : undefined}
+          >
             <Pressable style={styles.dialogBox} onPress={(e) => e.stopPropagation()}>
               <Text style={styles.dialogTitle}>{dialogo.titulo}</Text>
               <Text style={styles.dialogMessage}>{dialogo.mensaje}</Text>
@@ -507,17 +506,6 @@ export default function Main() {
                       </Text>
                       {activo && <Text style={styles.animeCardActivo}>✓ Activo</Text>}
                     </Pressable>
-
-                    {item.esCustom && (
-                      <Pressable
-                        style={styles.deleteAnimeBtn}
-                        onPress={() =>
-                          pedirConfirmacionEliminarAnime(item.nombre_clave, item.nombre_display)
-                        }
-                      >
-                        <Text style={styles.deleteAnimeBtnText}>🗑 Eliminar</Text>
-                      </Pressable>
-                    )}
                   </View>
                 );
               }}
@@ -746,18 +734,6 @@ const styles = StyleSheet.create({
   },
   animeCardText: { fontSize: 11, fontWeight: "bold", textAlign: "center" },
   animeCardActivo: { fontSize: 10, color: "#aaa", marginTop: 3 },
-
-  deleteAnimeBtn: {
-    marginTop: 6,
-    paddingVertical: 5,
-    paddingHorizontal: 10,
-    backgroundColor: "#2a0a0a",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#5a1a1a",
-    alignSelf: "flex-end",
-  },
-  deleteAnimeBtnText: { color: "#E74C3C", fontSize: 11, fontWeight: "bold" },
 
   animeCardAgregar: {
     width: 112,

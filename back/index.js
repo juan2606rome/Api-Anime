@@ -58,7 +58,6 @@ function escaparIdentificador(texto) {
 }
 
 async function inicializarBaseDatos() {
-  // Tabla usuarios
   await client.query(`
     CREATE TABLE IF NOT EXISTS usuarios (
       id          SERIAL PRIMARY KEY,
@@ -68,7 +67,6 @@ async function inicializarBaseDatos() {
     )
   `);
 
-  // Tabla de animes personalizados
   await client.query(`
     CREATE TABLE IF NOT EXISTS animes_personalizados (
       id             SERIAL PRIMARY KEY,
@@ -78,14 +76,12 @@ async function inicializarBaseDatos() {
     )
   `);
 
-  // Usuario admin por defecto
   await client.query(`
     INSERT INTO usuarios (usuario, contrasena)
     VALUES ('admin', 'admin123')
     ON CONFLICT (usuario) DO NOTHING
   `);
 
-  // Tablas fijas
   for (const tabla of Object.values(TABLAS_FIJAS)) {
     await client.query(`
       CREATE TABLE IF NOT EXISTS "${tabla}" (
@@ -105,7 +101,6 @@ async function inicializarBaseDatos() {
   console.log("✅ Base de datos inicializada");
 }
 
-// Devuelve el nombre de tabla para un anime, o null si no existe
 async function getTabla(anime) {
   const animeKey = normalizarAnimeKey(anime);
   if (!animeKey) return null;
@@ -125,7 +120,6 @@ async function getTabla(anime) {
   return null;
 }
 
-// Parsea el body JSON de la request
 function parseBody(req) {
   return new Promise((resolve) => {
     let body = "";
@@ -177,31 +171,45 @@ async function eliminarAnimeCompleto(clave) {
 }
 
 // Reordena los IDs de una tabla para que queden consecutivos: 1, 2, 3...
+// Esta versión es segura: reconstruye los registros dentro de la misma tabla.
 async function compactarIdsTabla(tabla) {
   const tablaEscapada = escaparIdentificador(tabla);
 
-  // Reasigna IDs de forma consecutiva según el orden actual
-  await client.query(`
-    WITH ordenados AS (
-      SELECT
-        id,
-        ROW_NUMBER() OVER (ORDER BY id) AS nuevo_id
-      FROM "${tablaEscapada}"
-    )
-    UPDATE "${tablaEscapada}" t
-    SET id = o.nuevo_id
-    FROM ordenados o
-    WHERE t.id = o.id
-  `);
+  const columnas = [
+    "nombre",
+    "edad",
+    "poder_tecnica",
+    "nacionalidad",
+    "imagen1",
+    "imagen2",
+    "imagen3",
+    "imagen4",
+  ];
 
-  // Reinicia la secuencia para que el siguiente INSERT siga desde el máximo + 1
-  await client.query(`
-    SELECT setval(
-      pg_get_serial_sequence('${tablaEscapada}', 'id'),
-      COALESCE((SELECT MAX(id) FROM "${tablaEscapada}"), 0) + 1,
-      false
-    )
-  `);
+  const selectSQL = `SELECT ${columnas.join(", ")} FROM "${tablaEscapada}" ORDER BY id ASC`;
+  const insertSQL = `
+    INSERT INTO "${tablaEscapada}"
+    (${columnas.join(", ")})
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+  `;
+
+  const result = await client.query(selectSQL);
+  const filas = result.rows;
+
+  await client.query(`TRUNCATE TABLE "${tablaEscapada}" RESTART IDENTITY`);
+
+  for (const fila of filas) {
+    await client.query(insertSQL, [
+      fila.nombre,
+      fila.edad,
+      fila.poder_tecnica,
+      fila.nacionalidad,
+      fila.imagen1,
+      fila.imagen2,
+      fila.imagen3,
+      fila.imagen4,
+    ]);
+  }
 }
 
 // ─── SWAGGER SPEC ────────────────────────────────────────────────────────────
@@ -209,7 +217,7 @@ const swaggerSpec = {
   openapi: "3.0.3",
   info: {
     title: "Anime Characters Microservice API",
-    version: "2.2.0",
+    version: "2.3.0",
     description:
       "API REST para gestión de personajes de anime con login, registro, animes personalizados, borrado e imágenes base64.",
   },
@@ -399,7 +407,7 @@ const server = http.createServer(async (req, res) => {
   // ── Raíz ──────────────────────────────────────────────────────────────────
   if (method === "GET" && pathname === "/") {
     return sendJSON(res, 200, {
-      servicio: "Anime Microservice v2.2",
+      servicio: "Anime Microservice v2.3",
       endpoints: {
         "POST /auth/login": "Iniciar sesión",
         "POST /auth/register": "Crear usuario",
@@ -787,7 +795,6 @@ const server = http.createServer(async (req, res) => {
           return sendJSON(res, 404, { error: `Personaje con id ${id} no encontrado.` });
         }
 
-        // Reordenar IDs: 1, 2, 3...
         await compactarIdsTabla(tabla);
 
         await client.query("COMMIT");
@@ -814,7 +821,7 @@ const server = http.createServer(async (req, res) => {
     return res.end(`<!DOCTYPE html>
 <html lang="es">
 <head>
-  <title>Anime API v2.2 — Swagger UI</title>
+  <title>Anime API v2.3 — Swagger UI</title>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui.css"/>
@@ -836,7 +843,6 @@ const server = http.createServer(async (req, res) => {
 </html>`);
   }
 
-  // ── 404 global ────────────────────────────────────────────────────────────
   return sendJSON(res, 404, {
     error: "Ruta no encontrada. Ve a /api-docs para ver la documentación.",
   });
