@@ -1,6 +1,16 @@
-node_modules
+# Dependencias
+node_modules/
+
+# Variables de entorno
 .env
-coverage
-.sonar
-dist
-build
+back/.env
+front/.env
+
+# SonarQube
+.scannerwork/
+.sonar/
+
+# Builds
+dist/
+build/
+coverage/
