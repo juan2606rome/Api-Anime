@@ -1,6 +1,5 @@
 import { useContext, useState } from "react";
 import {
-  Button,
   FlatList,
   Image,
   Modal,
@@ -111,47 +110,62 @@ export default function AnimeView({ animeKey, titulo, color, visible = true }: P
   return (
     <View style={[styles.container, !visible && styles.hidden]}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <Text style={[styles.title, { color }]}>{titulo}: Characters</Text>
+        <Text style={[styles.title, { color }]}>{titulo}</Text>
+
+        <View style={[styles.headerBadge, { borderColor: color }]}>
+          <Text style={[styles.headerBadgeText, { color }]}>
+            {cfg.emoji} Vista principal
+          </Text>
+        </View>
 
         <TextInput
-          style={[styles.input, { borderColor: color }]}
+          style={styles.input}
           placeholder={cfg.placeholder}
-          placeholderTextColor="#999"
+          placeholderTextColor="#8A94A6"
           onChangeText={setTexto}
           value={texto}
         />
 
         <View style={styles.botonesRow}>
-          <Button title={cfg.btnLabel} onPress={consultar} color={color} />
+          <Pressable
+            style={[styles.actionBtn, { backgroundColor: color }]}
+            onPress={consultar}
+          >
+            <Text style={styles.actionBtnText}>{cfg.btnLabel}</Text>
+          </Pressable>
         </View>
 
         <Tarjeta>
           {error !== "" && <Text style={styles.textoError}>{error}</Text>}
 
           {imagenFrontal && (
-            <View style={{ alignItems: "center" }}>
+            <View style={styles.detailBox}>
               <Text style={styles.text}>Nombre: {nombre}</Text>
               <Text style={styles.text}>Edad: {edad} años</Text>
               <Text style={styles.text}>Poder/Técnica: {poderTecnica}</Text>
               <Text style={styles.text}>Nacionalidad: {nacionalidad}</Text>
+
               <Image
                 source={{ uri: imagenFrontal }}
-                style={{ width: 100, height: 100, borderRadius: 10, marginTop: 10 }}
+                style={styles.previewImage}
+                resizeMode="cover"
               />
             </View>
           )}
 
           {imagenes.length > 0 && (
-            <>
+            <View style={styles.gallerySummary}>
               <Text style={[styles.contador, { color }]}>
                 {cfg.emoji} {imagenes.length} imágenes encontradas
               </Text>
-              <Button
-                title="Ver Galería"
+
+              <Pressable
+                style={styles.galleryBtn}
                 onPress={() => setIsModalVisible(true)}
-                color="#4682B4"
-              />
-            </>
+              >
+                <Text style={styles.galleryBtnText}>Ver galería</Text>
+              </Pressable>
+            </View>
           )}
         </Tarjeta>
       </ScrollView>
@@ -164,8 +178,8 @@ export default function AnimeView({ animeKey, titulo, color, visible = true }: P
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <View style={[styles.titleContainer, { backgroundColor: color }]}>
-              <Text style={styles.title2}>Galería de imágenes</Text>
+            <View style={[styles.modalHeader, { backgroundColor: color }]}>
+              <Text style={styles.modalTitle}>Galería de imágenes</Text>
               <Pressable onPress={() => setIsModalVisible(false)}>
                 <Text style={styles.cerrarBtn}>✕</Text>
               </Pressable>
@@ -191,47 +205,158 @@ export default function AnimeView({ animeKey, titulo, color, visible = true }: P
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0a0a1a" },
-  hidden: { display: "none" },
-  scrollContent: { padding: 20, alignItems: "center", paddingBottom: 40 },
-  title: { fontSize: 24, fontWeight: "bold", marginBottom: 20 },
+  container: {
+    flex: 1,
+    backgroundColor: "#F5F7FA",
+  },
+  hidden: {
+    display: "none",
+  },
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 40,
+  },
+  title: {
+    fontSize: 26,
+    fontWeight: "bold",
+    marginBottom: 14,
+    textAlign: "center",
+  },
+  headerBadge: {
+    alignSelf: "center",
+    borderWidth: 1,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 999,
+    marginBottom: 16,
+    backgroundColor: "#FFFFFF",
+  },
+  headerBadgeText: {
+    fontSize: 12,
+    fontWeight: "bold",
+  },
   input: {
     width: "100%",
     borderWidth: 1,
-    borderRadius: 10,
-    padding: 10,
-    marginBottom: 15,
-    backgroundColor: "#fff",
+    borderColor: "#B0BEC5",
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 14,
+    backgroundColor: "#FFFFFF",
+    color: "#111",
+    fontSize: 15,
   },
-  botonesRow: { flexDirection: "row", marginBottom: 10 },
-  text: { marginTop: 15, fontSize: 16, color: "#000" },
-  textoError: { marginTop: 15, fontSize: 16, color: "#ff4d4d", fontWeight: "bold" },
-  contador: { marginTop: 10, marginBottom: 10, fontSize: 15, fontWeight: "bold" },
-  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.7)", justifyContent: "flex-end" },
+  botonesRow: {
+    flexDirection: "row",
+    marginBottom: 14,
+  },
+  actionBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: "center",
+    elevation: 2,
+  },
+  actionBtnText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 15,
+  },
+  detailBox: {
+    alignItems: "center",
+    paddingVertical: 6,
+  },
+  text: {
+    marginTop: 10,
+    fontSize: 16,
+    color: "#111",
+    textAlign: "center",
+  },
+  textoError: {
+    marginTop: 4,
+    fontSize: 16,
+    color: "#C62828",
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  contador: {
+    marginBottom: 10,
+    fontSize: 15,
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  previewImage: {
+    width: 110,
+    height: 110,
+    borderRadius: 14,
+    marginTop: 12,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
+  },
+  gallerySummary: {
+    marginTop: 14,
+    gap: 10,
+  },
+  galleryBtn: {
+    backgroundColor: "#1565C0",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    alignItems: "center",
+  },
+  galleryBtnText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 14,
+  },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.35)",
+    justifyContent: "flex-end",
+  },
   modalContent: {
     height: "35%",
-    backgroundColor: "#1c1c1c",
-    borderTopRightRadius: 18,
-    borderTopLeftRadius: 18,
+    backgroundColor: "#FFFFFF",
+    borderTopRightRadius: 22,
+    borderTopLeftRadius: 22,
+    borderTopWidth: 1,
+    borderColor: "#E0E0E0",
   },
-  titleContainer: {
-    height: 50,
-    borderTopRightRadius: 18,
-    borderTopLeftRadius: 18,
+  modalHeader: {
+    height: 54,
+    borderTopRightRadius: 22,
+    borderTopLeftRadius: 22,
     paddingHorizontal: 20,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
   },
-  title2: { color: "#fff", fontSize: 18, fontWeight: "bold" },
-  cerrarBtn: { color: "#fff", fontSize: 24, fontWeight: "bold" },
-  listContainer: { paddingVertical: 20, paddingHorizontal: 10 },
+  modalTitle: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  cerrarBtn: {
+    color: "#fff",
+    fontSize: 24,
+    fontWeight: "bold",
+  },
+  listContainer: {
+    paddingVertical: 20,
+    paddingHorizontal: 10,
+  },
   imageWrapper: {
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFFFF",
     borderRadius: 15,
     padding: 5,
     marginHorizontal: 10,
-    elevation: 5,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
   },
-  imagen: { width: 150, height: 150 },
+  imagen: {
+    width: 150,
+    height: 150,
+  },
 });

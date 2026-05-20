@@ -148,7 +148,7 @@ export default function AnimePersonalizadoView({
         nombre_clave: animeKey,
         nombre_display: titulo,
         emoji: "✨",
-        color: "#9C27B0",
+        color: "#7B1FA2",
         data: p,
       },
     ]);
@@ -343,7 +343,7 @@ export default function AnimePersonalizadoView({
         <TextInput
           style={styles.input}
           placeholder="Buscar por nombre o ID..."
-          placeholderTextColor="#999"
+          placeholderTextColor="#8A94A6"
           value={texto}
           onChangeText={setTexto}
           onSubmitEditing={buscarPersonaje}
@@ -351,11 +351,11 @@ export default function AnimePersonalizadoView({
         />
 
         <View style={styles.botonesRow}>
-          <Pressable style={[styles.btn, { backgroundColor: "#9C27B0" }]} onPress={buscarPersonaje}>
+          <Pressable style={[styles.btn, { backgroundColor: "#7B1FA2" }]} onPress={buscarPersonaje}>
             <Text style={styles.btnText}>🔍 Buscar</Text>
           </Pressable>
 
-          <Pressable style={[styles.btn, { backgroundColor: "#27AE60" }]} onPress={abrirFormAgregar}>
+          <Pressable style={[styles.btn, { backgroundColor: "#2E7D32" }]} onPress={abrirFormAgregar}>
             <Text style={styles.btnText}>＋ Agregar</Text>
           </Pressable>
         </View>
@@ -384,14 +384,15 @@ export default function AnimePersonalizadoView({
             {personajeActual.imagen1 && (
               <Image
                 source={{ uri: personajeActual.imagen1 }}
-                style={{ width: 100, height: 100, borderRadius: 10, marginTop: 10 }}
+                style={styles.imagenPreview}
+                resizeMode="cover"
               />
             )}
 
             <View style={styles.accionesCard}>
               {imagenes.length > 0 && (
                 <Pressable
-                  style={[styles.btn, { backgroundColor: "#4682B4" }]}
+                  style={[styles.btn, { backgroundColor: "#1565C0" }]}
                   onPress={() => setModalGaleria(true)}
                 >
                   <Text style={styles.btnText}>🖼️ Ver Galería ({imagenes.length})</Text>
@@ -399,17 +400,17 @@ export default function AnimePersonalizadoView({
               )}
 
               <Pressable
-                style={[styles.btn, { backgroundColor: "#F39C12" }]}
+                style={[styles.btn, { backgroundColor: "#F9A825" }]}
                 onPress={() => abrirFormEditar(personajeActual)}
               >
-                <Text style={styles.btnText}>✏️ Editar</Text>
+                <Text style={styles.btnTextDark}>✏️ Editar</Text>
               </Pressable>
 
               {eliminando ? (
-                <ActivityIndicator color="#E74C3C" style={{ marginTop: 4 }} />
+                <ActivityIndicator color="#C62828" style={{ marginTop: 4 }} />
               ) : (
                 <Pressable
-                  style={[styles.btn, { backgroundColor: "#E74C3C" }]}
+                  style={[styles.btn, { backgroundColor: "#C62828" }]}
                   onPress={() => confirmarEliminarPersonaje(personajeActual.id)}
                 >
                   <Text style={styles.btnText}>🗑️ Eliminar Personaje</Text>
@@ -422,7 +423,7 @@ export default function AnimePersonalizadoView({
         <Text style={styles.listaTitle}>Todos los personajes ({personajes.length})</Text>
 
         {loading ? (
-          <ActivityIndicator color="#9C27B0" size="large" style={{ marginTop: 20 }} />
+          <ActivityIndicator color="#7B1FA2" size="large" style={{ marginTop: 20 }} />
         ) : personajes.length === 0 ? (
           <Text style={styles.listaVacia}>
             No hay personajes aún. ¡Agrega el primero con el botón de arriba!
@@ -449,7 +450,7 @@ export default function AnimePersonalizadoView({
                 </Text>
               </View>
 
-              <Text style={{ color: "#9C27B0", fontSize: 20 }}>›</Text>
+              <Text style={{ color: "#7B1FA2", fontSize: 20 }}>›</Text>
             </Pressable>
           ))
         )}
@@ -471,7 +472,7 @@ export default function AnimePersonalizadoView({
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <View style={[styles.modalHeader, { backgroundColor: "#9C27B0" }]}>
+            <View style={[styles.modalHeader, { backgroundColor: "#7B1FA2" }]}>
               <Text style={styles.modalTitle}>Galería — {titulo}</Text>
               <Pressable onPress={() => setModalGaleria(false)}>
                 <Text style={styles.cerrarBtn}>✕</Text>
@@ -502,7 +503,7 @@ export default function AnimePersonalizadoView({
       >
         <View style={styles.formOverlay}>
           <View style={styles.formContent}>
-            <View style={[styles.modalHeader, { backgroundColor: editando ? "#F39C12" : "#27AE60" }]}>
+            <View style={[styles.modalHeader, { backgroundColor: editando ? "#F9A825" : "#2E7D32" }]}>
               <Text style={styles.modalTitle}>
                 {editando ? "✏️ Editar Personaje" : "✨ Nuevo Personaje"}
               </Text>
@@ -516,7 +517,7 @@ export default function AnimePersonalizadoView({
               <TextInput
                 style={styles.formInput}
                 placeholder="Nombre del personaje"
-                placeholderTextColor="#666"
+                placeholderTextColor="#8A94A6"
                 value={form.nombre}
                 onChangeText={(v) => setForm({ ...form, nombre: v })}
               />
@@ -525,7 +526,7 @@ export default function AnimePersonalizadoView({
               <TextInput
                 style={styles.formInput}
                 placeholder="Edad"
-                placeholderTextColor="#666"
+                placeholderTextColor="#8A94A6"
                 value={form.edad}
                 keyboardType="numeric"
                 onChangeText={(v) => setForm({ ...form, edad: v })}
@@ -535,7 +536,7 @@ export default function AnimePersonalizadoView({
               <TextInput
                 style={styles.formInput}
                 placeholder="Poder o técnica especial"
-                placeholderTextColor="#666"
+                placeholderTextColor="#8A94A6"
                 value={form.poder_tecnica}
                 onChangeText={(v) => setForm({ ...form, poder_tecnica: v })}
               />
@@ -544,7 +545,7 @@ export default function AnimePersonalizadoView({
               <TextInput
                 style={styles.formInput}
                 placeholder="País de origen"
-                placeholderTextColor="#666"
+                placeholderTextColor="#8A94A6"
                 value={form.nacionalidad}
                 onChangeText={(v) => setForm({ ...form, nacionalidad: v })}
               />
@@ -568,13 +569,13 @@ export default function AnimePersonalizadoView({
 
               <View style={{ gap: 10, marginTop: 25 }}>
                 {guardando ? (
-                  <ActivityIndicator color="#27AE60" size="large" />
+                  <ActivityIndicator color="#2E7D32" size="large" />
                 ) : (
                   <>
                     <Pressable
                       style={[
                         styles.formBtn,
-                        { backgroundColor: editando ? "#F39C12" : "#27AE60" },
+                        { backgroundColor: editando ? "#F9A825" : "#2E7D32" },
                       ]}
                       onPress={guardarPersonaje}
                     >
@@ -584,10 +585,10 @@ export default function AnimePersonalizadoView({
                     </Pressable>
 
                     <Pressable
-                      style={[styles.formBtn, { backgroundColor: "#444" }]}
+                      style={[styles.formBtn, { backgroundColor: "#ECEFF1" }]}
                       onPress={() => setModalForm(false)}
                     >
-                      <Text style={styles.formBtnText}>Cancelar</Text>
+                      <Text style={styles.formBtnTextDark}>Cancelar</Text>
                     </Pressable>
                   </>
                 )}
@@ -618,7 +619,7 @@ export default function AnimePersonalizadoView({
                     style={[styles.dialogBtn, styles.dialogBtnCancel]}
                     onPress={cerrarDialogo}
                   >
-                    <Text style={styles.dialogBtnText}>
+                    <Text style={styles.dialogBtnTextDark}>
                       {dialogo.textoCancelar ?? "Cancelar"}
                     </Text>
                   </Pressable>
@@ -653,26 +654,35 @@ export default function AnimePersonalizadoView({
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0a0a1a" },
-  hidden: { display: "none" },
-  scrollContent: { padding: 20, paddingBottom: 50 },
+  container: {
+    flex: 1,
+    backgroundColor: "#F5F7FA",
+  },
+  hidden: {
+    display: "none",
+  },
+  scrollContent: {
+    padding: 20,
+    paddingBottom: 50,
+  },
 
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#9C27B0",
+    color: "#7B1FA2",
     marginBottom: 20,
     textAlign: "center",
   },
   input: {
     width: "100%",
     borderWidth: 1,
-    borderColor: "#9C27B0",
+    borderColor: "#B0BEC5",
     borderRadius: 10,
     padding: 12,
     marginBottom: 12,
     backgroundColor: "#fff",
     fontSize: 15,
+    color: "#111",
   },
   botonesRow: {
     flexDirection: "row",
@@ -683,19 +693,34 @@ const styles = StyleSheet.create({
   btn: {
     paddingVertical: 10,
     paddingHorizontal: 14,
-    borderRadius: 8,
+    borderRadius: 10,
     alignItems: "center",
   },
-  btnText: { color: "#fff", fontWeight: "bold", fontSize: 13 },
-
-  label: { fontWeight: "bold" },
+  btnText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 13,
+  },
+  btnTextDark: {
+    color: "#111",
+    fontWeight: "bold",
+    fontSize: 13,
+  },
+  label: {
+    fontWeight: "bold",
+    color: "#111",
+  },
   textoError: {
-    color: "#ff4d4d",
+    color: "#C62828",
     fontWeight: "bold",
     marginBottom: 10,
     textAlign: "center",
   },
-  text: { marginTop: 10, fontSize: 15, color: "#111" },
+  text: {
+    marginTop: 10,
+    fontSize: 15,
+    color: "#111",
+  },
 
   accionesCard: {
     gap: 8,
@@ -708,17 +733,17 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
   },
   btnEliminarAnime: {
-    backgroundColor: "#C0392B",
+    backgroundColor: "#C62828",
   },
 
   listaTitle: {
-    color: "#666",
+    color: "#607D8B",
     marginTop: 25,
     marginBottom: 10,
     fontSize: 13,
   },
   listaVacia: {
-    color: "#555",
+    color: "#607D8B",
     fontStyle: "italic",
     textAlign: "center",
     marginTop: 20,
@@ -728,38 +753,45 @@ const styles = StyleSheet.create({
   personajeItem: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#141420",
+    backgroundColor: "#FFFFFF",
     borderRadius: 12,
     padding: 12,
     marginBottom: 8,
     borderWidth: 1,
-    borderColor: "#2a2a3a",
+    borderColor: "#E0E0E0",
     gap: 12,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowRadius: 5,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 2,
   },
   personajeImg: { width: 52, height: 52, borderRadius: 10 },
   personajeImgPlaceholder: {
-    backgroundColor: "#2a2a3a",
+    backgroundColor: "#ECEFF1",
     justifyContent: "center",
     alignItems: "center",
   },
-  personajeNombre: { color: "#fff", fontWeight: "bold", fontSize: 15 },
-  personajeInfo: { color: "#666", fontSize: 12, marginTop: 2 },
+  personajeNombre: { color: "#111", fontWeight: "bold", fontSize: 15 },
+  personajeInfo: { color: "#607D8B", fontSize: 12, marginTop: 2 },
 
   modalOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.75)",
+    backgroundColor: "rgba(0,0,0,0.35)",
     justifyContent: "flex-end",
   },
   modalContent: {
     height: "38%",
-    backgroundColor: "#1a1a2e",
-    borderTopRightRadius: 20,
-    borderTopLeftRadius: 20,
+    backgroundColor: "#FFFFFF",
+    borderTopRightRadius: 22,
+    borderTopLeftRadius: 22,
+    borderTopWidth: 1,
+    borderColor: "#E0E0E0",
   },
   modalHeader: {
-    height: 52,
-    borderTopRightRadius: 20,
-    borderTopLeftRadius: 20,
+    height: 54,
+    borderTopRightRadius: 22,
+    borderTopLeftRadius: 22,
     paddingHorizontal: 20,
     flexDirection: "row",
     alignItems: "center",
@@ -775,33 +807,37 @@ const styles = StyleSheet.create({
     padding: 5,
     marginHorizontal: 8,
     elevation: 4,
+    borderWidth: 1,
+    borderColor: "#E0E0E0",
   },
   galeriaImg: { width: 155, height: 155 },
 
   formOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.92)",
+    backgroundColor: "rgba(0,0,0,0.35)",
     justifyContent: "flex-end",
   },
   formContent: {
     height: "94%",
-    backgroundColor: "#111120",
+    backgroundColor: "#FFFFFF",
     borderTopRightRadius: 22,
     borderTopLeftRadius: 22,
+    borderTopWidth: 1,
+    borderColor: "#E0E0E0",
   },
   formLabel: {
-    color: "#888",
+    color: "#607D8B",
     fontSize: 13,
     marginBottom: 5,
     marginTop: 2,
   },
   formInput: {
     borderWidth: 1,
-    borderColor: "#2a2a3a",
+    borderColor: "#B0BEC5",
     borderRadius: 10,
     padding: 12,
-    color: "#fff",
-    backgroundColor: "#0d0d1a",
+    color: "#111",
+    backgroundColor: "#F8FAFC",
     marginBottom: 14,
     fontSize: 15,
   },
@@ -813,16 +849,16 @@ const styles = StyleSheet.create({
   imagenSlot: {
     width: "47%",
     height: 120,
-    backgroundColor: "#1a1a2e",
+    backgroundColor: "#FAFAFA",
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#333",
+    borderColor: "#DADDE2",
     borderStyle: "dashed",
     justifyContent: "center",
     alignItems: "center",
   },
   imagenSlotText: {
-    color: "#555",
+    color: "#607D8B",
     textAlign: "center",
     fontSize: 13,
   },
@@ -841,10 +877,15 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 16,
   },
+  formBtnTextDark: {
+    color: "#111",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
 
   dialogOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.72)",
+    backgroundColor: "rgba(0,0,0,0.35)",
     justifyContent: "center",
     alignItems: "center",
     padding: 22,
@@ -852,21 +893,26 @@ const styles = StyleSheet.create({
   dialogBox: {
     width: "100%",
     maxWidth: 420,
-    backgroundColor: "#111120",
+    backgroundColor: "#FFFFFF",
     borderRadius: 18,
     padding: 20,
     borderWidth: 1,
-    borderColor: "#333",
+    borderColor: "#E0E0E0",
+    shadowColor: "#000",
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 6,
   },
   dialogTitle: {
-    color: "#fff",
+    color: "#111",
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 10,
     textAlign: "center",
   },
   dialogMessage: {
-    color: "#cfcfe6",
+    color: "#444",
     fontSize: 14,
     lineHeight: 20,
     textAlign: "center",
@@ -886,13 +932,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   dialogBtnCancel: {
-    backgroundColor: "#2c2c3f",
+    backgroundColor: "#ECEFF1",
   },
   dialogBtnConfirm: {
-    backgroundColor: "#9C27B0",
+    backgroundColor: "#1565C0",
   },
   dialogBtnText: {
     color: "#fff",
+    fontWeight: "bold",
+    fontSize: 14,
+  },
+  dialogBtnTextDark: {
+    color: "#111",
     fontWeight: "bold",
     fontSize: 14,
   },
