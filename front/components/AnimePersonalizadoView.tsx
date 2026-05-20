@@ -415,17 +415,6 @@ export default function AnimePersonalizadoView({
                   <Text style={styles.btnText}>🗑️ Eliminar Personaje</Text>
                 </Pressable>
               )}
-
-              {onEliminarAnime && (
-                <View style={styles.eliminarAnimeWrap}>
-                  <Pressable
-                    style={[styles.btn, styles.btnEliminarAnime]}
-                    onPress={onEliminarAnime}
-                  >
-                    <Text style={styles.btnText}>🗑️ Eliminar Anime</Text>
-                  </Pressable>
-                </View>
-              )}
             </View>
           </Tarjeta>
         )}
@@ -463,6 +452,14 @@ export default function AnimePersonalizadoView({
               <Text style={{ color: "#9C27B0", fontSize: 20 }}>›</Text>
             </Pressable>
           ))
+        )}
+
+        {onEliminarAnime && (
+          <View style={styles.animeFooter}>
+            <Pressable style={[styles.btn, styles.btnEliminarAnime]} onPress={onEliminarAnime}>
+              <Text style={styles.btnText}>🗑️ Eliminar Anime</Text>
+            </Pressable>
+          </View>
         )}
       </ScrollView>
 
@@ -705,14 +702,13 @@ const styles = StyleSheet.create({
     marginTop: 14,
     width: "100%",
   },
-  eliminarAnimeWrap: {
-    width: "100%",
+
+  animeFooter: {
+    marginTop: 18,
     alignItems: "flex-end",
-    marginTop: 2,
   },
   btnEliminarAnime: {
     backgroundColor: "#C0392B",
-    alignSelf: "flex-end",
   },
 
   listaTitle: {
