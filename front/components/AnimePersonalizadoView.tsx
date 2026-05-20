@@ -40,6 +40,27 @@ interface Props {
 
 const FORM_VACIO = { nombre: "", edad: "", poder_tecnica: "", nacionalidad: "" };
 
+// ── Helpers Seguros para Web (Netlify/Render) y Móvil ───────────────────────
+const mostrarAlerta = (titulo: string, mensaje: string) => {
+  if (Platform.OS === "web") {
+    window.alert(`${titulo}: ${mensaje}`);
+  } else {
+    Alert.alert(titulo, mensaje);
+  }
+};
+
+const confirmarAccion = (titulo: string, mensaje: string, alConfirmar: () => void) => {
+  if (Platform.OS === "web") {
+    const res = window.confirm(`${titulo}\n\n${mensaje}`);
+    if (res) alConfirmar();
+  } else {
+    Alert.alert(titulo, mensaje, [
+      { text: "Cancelar", style: "cancel" },
+      { text: "Sí, continuar", style: "destructive", onPress: alConfirmar },
+    ]);
+  }
+};
+
 export default function AnimePersonalizadoView({
   animeKey,
   titulo,
@@ -89,10 +110,8 @@ export default function AnimePersonalizadoView({
     }
   }
 
-  // Guarda la consulta actual en el contexto para mostrarla en el Resumen
   function guardarEnResumen(p: Personaje) {
-    setConsultasPersonalizadas((prev) => [
-      // reemplaza si ya había una consulta de este anime
+    setConsultasPersonalizadas((prev: any[]) => [
       ...prev.filter((x) => x.nombre_clave !== animeKey),
       {
         nombre_clave: animeKey,
@@ -110,7 +129,7 @@ export default function AnimePersonalizadoView({
     setError("");
     const imgs = [p.imagen1, p.imagen2, p.imagen3, p.imagen4].filter(Boolean) as string[];
     setImagenes(imgs);
-    guardarEnResumen(p);   // ← KEY: actualiza el Resumen al tocar de la lista
+    guardarEnResumen(p);
   }
 
   // ── Buscar ──────────────────────────────────────────────────────────────────
@@ -145,7 +164,7 @@ export default function AnimePersonalizadoView({
   async function seleccionarImagen(index: number) {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      Alert.alert("Permiso denegado", "Necesitamos acceso a tu galería de fotos.");
+      mostrarAlerta("Permiso denegado", "Necesitamos acceso a tu galería de fotos.");
       return;
     }
 
@@ -187,7 +206,10 @@ export default function AnimePersonalizadoView({
   }
 
   async function guardarPersonaje() {
-    if (!form.nombre.trim()) { Alert.alert("Error", "El nombre es obligatorio"); return; }
+    if (!form.nombre.trim()) { 
+      mostrarAlerta("Error", "El nombre es obligatorio"); 
+      return; 
+    }
     setGuardando(true);
 
     const body: Record<string, any> = {
@@ -215,35 +237,28 @@ export default function AnimePersonalizadoView({
       const data = await res.json();
 
       if (data.ok) {
-        Alert.alert("✅ Éxito", editando ? "Personaje actualizado" : "Personaje agregado");
+        mostrarAlerta("✅ Éxito", editando ? "Personaje actualizado" : "Personaje agregado");
         setModalForm(false);
         setPersonajeActual(null);
         setTexto("");
         await cargarPersonajes();
         if (data.personaje) guardarEnResumen(data.personaje);
       } else {
-        Alert.alert("Error al guardar", data.error ?? "No se pudo guardar");
+        mostrarAlerta("Error al guardar", data.error ?? "No se pudo guardar");
       }
     } catch (err) {
-      Alert.alert("Error", "Error de conexión al guardar");
+      mostrarAlerta("Error", "Error de conexión al guardar");
     } finally {
       setGuardando(false);
     }
   }
 
   // ── ELIMINAR PERSONAJE ───────────────────────────────────────────────────────
-  async function confirmarEliminarPersonaje(id: number) {
-    Alert.alert(
-      "🗑️  Eliminar personaje",
+  function confirmarEliminarPersonaje(id: number) {
+    confirmarAccion(
+      "🗑️ Eliminar personaje",
       "¿Seguro que quieres eliminar este personaje? Esta acción no se puede deshacer.",
-      [
-        { text: "Cancelar", style: "cancel" },
-        {
-          text: "Sí, eliminar",
-          style: "destructive",
-          onPress: () => ejecutarEliminarPersonaje(id),
-        },
-      ]
+      () => ejecutarEliminarPersonaje(id)
     );
   }
 
@@ -257,14 +272,14 @@ export default function AnimePersonalizadoView({
         setPersonajeActual(null);
         setTexto("");
         setImagenes([]);
-        setConsultasPersonalizadas((prev) => prev.filter((x) => x.nombre_clave !== animeKey));
+        setConsultasPersonalizadas((prev: any[]) => prev.filter((x) => x.nombre_clave !== animeKey));
         await cargarPersonajes();
-        Alert.alert("✅ Eliminado", "El personaje fue eliminado correctamente.");
+        mostrarAlerta("✅ Eliminado", "El personaje fue eliminado correctamente.");
       } else {
-        Alert.alert("Error al eliminar", data.error ?? "No se pudo eliminar el personaje.");
+        mostrarAlerta("Error al eliminar", data.error ?? "No se pudo eliminar el personaje.");
       }
     } catch {
-      Alert.alert("Error", "Error de conexión al intentar eliminar.");
+      mostrarAlerta("Error", "Error de conexión al intentar eliminar.");
     } finally {
       setEliminando(false);
     }
@@ -276,7 +291,7 @@ export default function AnimePersonalizadoView({
   return (
     <View style={[styles.container, !visible && styles.hidden]}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>✨  {titulo}</Text>
+        <Text style={styles.title}>✨ {titulo}</Text>
 
         {/* Buscador */}
         <TextInput
@@ -327,14 +342,14 @@ export default function AnimePersonalizadoView({
                   style={[styles.btn, { backgroundColor: "#4682B4" }]}
                   onPress={() => setModalGaleria(true)}
                 >
-                  <Text style={styles.btnText}>🖼️  Ver Galería ({imagenes.length})</Text>
+                  <Text style={styles.btnText}>🖼️ Ver Galería ({imagenes.length})</Text>
                 </Pressable>
               )}
               <Pressable
                 style={[styles.btn, { backgroundColor: "#F39C12" }]}
                 onPress={() => abrirFormEditar(personajeActual)}
               >
-                <Text style={styles.btnText}>✏️  Editar</Text>
+                <Text style={styles.btnText}>✏️ Editar</Text>
               </Pressable>
 
               {/* BOTÓN ELIMINAR PERSONAJE */}
@@ -345,7 +360,7 @@ export default function AnimePersonalizadoView({
                   style={[styles.btn, { backgroundColor: "#E74C3C" }]}
                   onPress={() => confirmarEliminarPersonaje(personajeActual.id)}
                 >
-                  <Text style={styles.btnText}>🗑️  Eliminar Personaje</Text>
+                  <Text style={styles.btnText}>🗑️ Eliminar Personaje</Text>
                 </Pressable>
               )}
             </View>
@@ -431,7 +446,7 @@ export default function AnimePersonalizadoView({
           <View style={styles.formContent}>
             <View style={[styles.modalHeader, { backgroundColor: editando ? "#F39C12" : "#27AE60" }]}>
               <Text style={styles.modalTitle}>
-                {editando ? "✏️  Editar Personaje" : "✨  Nuevo Personaje"}
+                {editando ? "✏️ Editar Personaje" : "✨ Nuevo Personaje"}
               </Text>
               <Pressable onPress={() => setModalForm(false)}>
                 <Text style={styles.cerrarBtn}>✕</Text>
