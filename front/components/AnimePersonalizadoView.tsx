@@ -382,11 +382,13 @@ export default function AnimePersonalizadoView({
             </Text>
 
             {personajeActual.imagen1 && (
-              <Image
-                source={{ uri: personajeActual.imagen1 }}
-                style={styles.imagenPreview}
-                resizeMode="cover"
-              />
+              <View style={styles.imagenMainWrap}>
+                <Image
+                  source={{ uri: personajeActual.imagen1 }}
+                  style={styles.imagenMain}
+                  resizeMode="cover"
+                />
+              </View>
             )}
 
             <View style={styles.accionesCard}>
@@ -720,6 +722,22 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 15,
     color: "#111",
+  },
+
+  imagenMainWrap: {
+    width: 110,
+    height: 110,
+    marginTop: 12,
+    borderRadius: 14,
+    overflow: "hidden",
+    alignSelf: "center",
+    backgroundColor: "#ECEFF1",
+    borderWidth: 1,
+    borderColor: "#DADDE2",
+  },
+  imagenMain: {
+    width: "100%",
+    height: "100%",
   },
 
   accionesCard: {

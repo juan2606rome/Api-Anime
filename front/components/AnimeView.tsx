@@ -112,11 +112,6 @@ export default function AnimeView({ animeKey, titulo, color, visible = true }: P
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <Text style={[styles.title, { color }]}>{titulo}</Text>
 
-        <View style={[styles.headerBadge, { borderColor: color }]}>
-          <Text style={[styles.headerBadgeText, { color }]}>
-            {cfg.emoji} Vista principal
-          </Text>
-        </View>
 
         <TextInput
           style={styles.input}
