@@ -40,15 +40,15 @@ type Dialogo = {
 };
 
 const ANIMES_FIJOS: AnimeFijo[] = [
-  { nombre_clave: "saintseiya", nombre_display: "Saint Seiya", color: "#DAA520", emoji: "🛡️" },
-  { nombre_clave: "hunterxhunter", nombre_display: "Hunter x Hunter", color: "#4CAF50", emoji: "🔎" },
-  { nombre_clave: "onepiece", nombre_display: "One Piece", color: "#E74C3C", emoji: "🏴‍☠️" },
+  { nombre_clave: "saintseiya", nombre_display: "Saint Seiya", color: "#B8860B", emoji: "🛡️" },
+  { nombre_clave: "hunterxhunter", nombre_display: "Hunter x Hunter", color: "#2E7D32", emoji: "🔎" },
+  { nombre_clave: "onepiece", nombre_display: "One Piece", color: "#C62828", emoji: "🏴‍☠️" },
 ];
 
 const ANIME_RESUMEN = {
   nombre_clave: "resumen",
   nombre_display: "Resumen",
-  color: "#4682B4",
+  color: "#1565C0",
   emoji: "📋",
 };
 
@@ -265,7 +265,7 @@ export default function Main() {
     const custom = animesPersonalizados.map((a: AnimePersonalizado) => ({
       nombre_clave: a.nombre_clave,
       nombre_display: a.nombre_display,
-      color: "#9C27B0",
+      color: "#7B1FA2",
       emoji: "✨",
       esCustom: true,
     }));
@@ -295,7 +295,7 @@ export default function Main() {
         <TextInput
           style={styles.loginInput}
           placeholder="Usuario"
-          placeholderTextColor="#555"
+          placeholderTextColor="#888"
           value={loginUsuario}
           onChangeText={setLoginUsuario}
           autoCapitalize="none"
@@ -305,7 +305,7 @@ export default function Main() {
         <TextInput
           style={styles.loginInput}
           placeholder="Contraseña"
-          placeholderTextColor="#555"
+          placeholderTextColor="#888"
           value={loginContrasena}
           onChangeText={setLoginContrasena}
           secureTextEntry
@@ -314,7 +314,7 @@ export default function Main() {
         {loginError !== "" && <Text style={styles.loginError}>{loginError}</Text>}
 
         {loginLoading ? (
-          <ActivityIndicator color="#DAA520" size="large" style={{ marginTop: 20 }} />
+          <ActivityIndicator color="#1565C0" size="large" style={{ marginTop: 20 }} />
         ) : (
           <>
             <Pressable
@@ -377,7 +377,7 @@ export default function Main() {
           <AnimeView
             animeKey="saintseiya"
             titulo="Saint Seiya"
-            color="#DAA520"
+            color="#B8860B"
             visible={animeActual === "saintseiya"}
           />
         </View>
@@ -386,7 +386,7 @@ export default function Main() {
           <AnimeView
             animeKey="hunterxhunter"
             titulo="Hunter x Hunter"
-            color="#4CAF50"
+            color="#2E7D32"
             visible={animeActual === "hunterxhunter"}
           />
         </View>
@@ -395,7 +395,7 @@ export default function Main() {
           <AnimeView
             animeKey="onepiece"
             titulo="One Piece"
-            color="#E74C3C"
+            color="#C62828"
             visible={animeActual === "onepiece"}
           />
         </View>
@@ -455,7 +455,7 @@ export default function Main() {
                 ...animesPersonalizados.map((a) => ({
                   nombre_clave: a.nombre_clave,
                   nombre_display: a.nombre_display,
-                  color: "#9C27B0",
+                  color: "#7B1FA2",
                   emoji: "✨",
                   esCustom: true,
                 })),
@@ -463,7 +463,7 @@ export default function Main() {
                 {
                   nombre_clave: "__add__",
                   nombre_display: "Agregar Anime",
-                  color: "#555",
+                  color: "#90A4AE",
                   emoji: "➕",
                   esCustom: false,
                 },
@@ -480,7 +480,7 @@ export default function Main() {
                         setTimeout(() => setModalAgregarAnime(true), 200);
                       }}
                     >
-                      <Text style={{ fontSize: 30 }}>➕</Text>
+                      <Text style={styles.animeCardAgregarEmoji}>➕</Text>
                       <Text style={styles.animeCardAgregarText}>Agregar{"\n"}Anime</Text>
                     </Pressable>
                   );
@@ -514,7 +514,7 @@ export default function Main() {
             <Text style={styles.selectorFooter}>
               👤 {usuarioLogueado} ·{" "}
               <Text
-                style={{ color: "#ff4d4d" }}
+                style={styles.logoutText}
                 onPress={() => {
                   setModalSelector(false);
                   setUsuarioLogueado(null);
@@ -543,7 +543,7 @@ export default function Main() {
             <TextInput
               style={styles.agregarInput}
               placeholder="Nombre del anime (ej: Dragon Ball)"
-              placeholderTextColor="#666"
+              placeholderTextColor="#888"
               value={nuevoAnimeName}
               onChangeText={setNuevoAnimeName}
               onSubmitEditing={crearAnime}
@@ -552,20 +552,20 @@ export default function Main() {
 
             <View style={styles.rowBtns}>
               <Pressable
-                style={[styles.agregarBtn, { backgroundColor: "#2a2a2a", flex: 1 }]}
+                style={[styles.agregarBtn, { backgroundColor: "#ECEFF1", flex: 1 }]}
                 onPress={() => {
                   setModalAgregarAnime(false);
                   setNuevoAnimeName("");
                 }}
               >
-                <Text style={styles.agregarBtnText}>Cancelar</Text>
+                <Text style={styles.agregarBtnTextDark}>Cancelar</Text>
               </Pressable>
 
               {agregandoAnime ? (
-                <ActivityIndicator color="#9C27B0" style={{ flex: 1 }} />
+                <ActivityIndicator color="#1565C0" style={{ flex: 1 }} />
               ) : (
                 <Pressable
-                  style={[styles.agregarBtn, { backgroundColor: "#9C27B0", flex: 1 }]}
+                  style={[styles.agregarBtn, { backgroundColor: "#1565C0", flex: 1 }]}
                   onPress={crearAnime}
                 >
                   <Text style={styles.agregarBtnText}>Crear ✨</Text>
@@ -597,7 +597,7 @@ export default function Main() {
                     style={[styles.dialogBtn, styles.dialogBtnCancel]}
                     onPress={cerrarDialogo}
                   >
-                    <Text style={styles.dialogBtnText}>
+                    <Text style={styles.dialogBtnTextDark}>
                       {dialogo.textoCancelar ?? "Cancelar"}
                     </Text>
                   </Pressable>
@@ -632,77 +632,120 @@ export default function Main() {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#F5F7FA",
+  },
+  content: {
+    flex: 1,
+  },
+  page: {
+    flex: 1,
+  },
+
   loginContainer: {
     flex: 1,
-    backgroundColor: "#0a0a1a",
+    backgroundColor: "#F5F7FA",
     justifyContent: "center",
     alignItems: "center",
     padding: 30,
   },
-  loginTitulo: { fontSize: 60, marginBottom: 5 },
+  loginTitulo: {
+    fontSize: 60,
+    marginBottom: 5,
+  },
   loginTituloTexto: {
     fontSize: 38,
     fontWeight: "bold",
-    color: "#DAA520",
+    color: "#1565C0",
     marginBottom: 8,
   },
-  loginSubtitulo: { fontSize: 15, color: "#666", marginBottom: 40 },
+  loginSubtitulo: {
+    fontSize: 15,
+    color: "#666",
+    marginBottom: 40,
+    textAlign: "center",
+  },
   loginInput: {
     width: "100%",
     borderWidth: 1,
-    borderColor: "#DAA520",
+    borderColor: "#B0BEC5",
     borderRadius: 12,
     padding: 14,
     marginBottom: 14,
-    backgroundColor: "#111",
-    color: "#fff",
+    backgroundColor: "#FFFFFF",
+    color: "#111",
     fontSize: 16,
   },
   loginError: {
-    color: "#ff4d4d",
+    color: "#C62828",
     marginBottom: 12,
     fontWeight: "bold",
     textAlign: "center",
   },
   loginBtn: {
-    backgroundColor: "#DAA520",
+    backgroundColor: "#1565C0",
     borderRadius: 12,
     paddingVertical: 14,
     width: "100%",
     alignItems: "center",
     marginTop: 8,
+    elevation: 2,
   },
-  loginBtnText: { color: "#000", fontWeight: "bold", fontSize: 18 },
-  loginLinkBtn: { marginTop: 16, paddingVertical: 8 },
-  loginLinkText: { color: "#9C27B0", fontWeight: "bold", textAlign: "center" },
-
-  container: { flex: 1, backgroundColor: "#0a0a1a" },
-  content: { flex: 1 },
-  page: { flex: 1 },
+  loginBtnText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 18,
+  },
+  loginLinkBtn: {
+    marginTop: 16,
+    paddingVertical: 8,
+  },
+  loginLinkText: {
+    color: "#7B1FA2",
+    fontWeight: "bold",
+    textAlign: "center",
+  },
 
   bottomBar: {
-    height: 58,
-    backgroundColor: "#111",
+    height: 62,
+    backgroundColor: "#FFFFFF",
     borderTopWidth: 2,
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 20,
+    paddingHorizontal: 18,
     gap: 10,
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: -2 },
+    elevation: 6,
   },
-  bottomEmoji: { fontSize: 22 },
-  bottomText: { flex: 1, fontSize: 16, fontWeight: "bold" },
-  bottomHint: { color: "#444", fontSize: 12 },
+  bottomEmoji: {
+    fontSize: 22,
+  },
+  bottomText: {
+    flex: 1,
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  bottomHint: {
+    color: "#607D8B",
+    fontSize: 12,
+  },
 
   selectorOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.75)",
+    backgroundColor: "rgba(0,0,0,0.35)",
     justifyContent: "flex-end",
   },
   selectorSheet: {
-    backgroundColor: "#1a1a1a",
-    borderTopLeftRadius: 22,
-    borderTopRightRadius: 22,
+    backgroundColor: "#FFFFFF",
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
     paddingBottom: 30,
+    borderTopWidth: 1,
+    borderColor: "#E0E0E0",
   },
   selectorHeader: {
     flexDirection: "row",
@@ -710,11 +753,22 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 20,
     borderBottomWidth: 1,
-    borderBottomColor: "#2a2a2a",
+    borderBottomColor: "#ECEFF1",
   },
-  selectorTitle: { color: "#fff", fontSize: 18, fontWeight: "bold" },
-  cerrarBtn: { color: "#fff", fontSize: 24, fontWeight: "bold" },
-  selectorList: { paddingVertical: 20, paddingHorizontal: 15 },
+  selectorTitle: {
+    color: "#111",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  cerrarBtn: {
+    color: "#111",
+    fontSize: 24,
+    fontWeight: "bold",
+  },
+  selectorList: {
+    paddingVertical: 20,
+    paddingHorizontal: 15,
+  },
 
   animeCardWrapper: {
     alignItems: "stretch",
@@ -724,87 +778,124 @@ const styles = StyleSheet.create({
   animeCard: {
     width: 112,
     height: 112,
-    backgroundColor: "#222",
+    backgroundColor: "#FAFAFA",
     borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "#333",
+    borderColor: "#DADDE2",
     padding: 8,
   },
-  animeCardText: { fontSize: 11, fontWeight: "bold", textAlign: "center" },
-  animeCardActivo: { fontSize: 10, color: "#aaa", marginTop: 3 },
+  animeCardText: {
+    fontSize: 11,
+    fontWeight: "bold",
+    textAlign: "center",
+  },
+  animeCardActivo: {
+    fontSize: 10,
+    color: "#607D8B",
+    marginTop: 3,
+  },
 
   animeCardAgregar: {
     width: 112,
     height: 112,
-    backgroundColor: "#111",
+    backgroundColor: "#FAFAFA",
     borderRadius: 16,
     justifyContent: "center",
     alignItems: "center",
     marginRight: 12,
     borderWidth: 1,
-    borderColor: "#444",
+    borderColor: "#B0BEC5",
     borderStyle: "dashed",
+  },
+  animeCardAgregarEmoji: {
+    fontSize: 30,
   },
   animeCardAgregarText: {
     fontSize: 11,
-    color: "#888",
+    color: "#607D8B",
     textAlign: "center",
     marginTop: 4,
   },
 
   selectorFooter: {
     textAlign: "center",
-    color: "#555",
+    color: "#607D8B",
     fontSize: 13,
     marginTop: 10,
+  },
+  logoutText: {
+    color: "#C62828",
+    fontWeight: "bold",
   },
 
   agregarOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.85)",
+    backgroundColor: "rgba(0,0,0,0.35)",
     justifyContent: "center",
     alignItems: "center",
     padding: 25,
   },
   agregarSheet: {
-    backgroundColor: "#1a1a1a",
-    borderRadius: 18,
-    padding: 25,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 20,
+    padding: 24,
     width: "100%",
     borderWidth: 1,
-    borderColor: "#9C27B0",
+    borderColor: "#E0E0E0",
+    shadowColor: "#000",
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 6,
   },
   agregarTitulo: {
-    color: "#fff",
+    color: "#111",
     fontSize: 22,
     fontWeight: "bold",
     textAlign: "center",
     marginBottom: 8,
   },
   agregarSubtitulo: {
-    color: "#777",
+    color: "#666",
     fontSize: 13,
     textAlign: "center",
     marginBottom: 20,
   },
   agregarInput: {
     borderWidth: 1,
-    borderColor: "#9C27B0",
+    borderColor: "#B0BEC5",
     borderRadius: 10,
     padding: 13,
-    color: "#fff",
-    backgroundColor: "#111",
+    color: "#111",
+    backgroundColor: "#F8FAFC",
     fontSize: 15,
   },
-  rowBtns: { flexDirection: "row", gap: 10, marginTop: 15 },
-  agregarBtn: { padding: 13, borderRadius: 10, alignItems: "center" },
-  agregarBtnText: { color: "#fff", fontWeight: "bold", fontSize: 15 },
+  rowBtns: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 15,
+  },
+  agregarBtn: {
+    padding: 13,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  agregarBtnText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 15,
+  },
+  agregarBtnTextDark: {
+    color: "#111",
+    fontWeight: "bold",
+    fontSize: 15,
+  },
 
   dialogOverlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.72)",
+    backgroundColor: "rgba(0,0,0,0.35)",
     justifyContent: "center",
     alignItems: "center",
     padding: 22,
@@ -812,21 +903,26 @@ const styles = StyleSheet.create({
   dialogBox: {
     width: "100%",
     maxWidth: 420,
-    backgroundColor: "#111120",
+    backgroundColor: "#FFFFFF",
     borderRadius: 18,
     padding: 20,
     borderWidth: 1,
-    borderColor: "#333",
+    borderColor: "#E0E0E0",
+    shadowColor: "#000",
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 6,
   },
   dialogTitle: {
-    color: "#fff",
+    color: "#111",
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 10,
     textAlign: "center",
   },
   dialogMessage: {
-    color: "#cfcfe6",
+    color: "#444",
     fontSize: 14,
     lineHeight: 20,
     textAlign: "center",
@@ -846,13 +942,18 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   dialogBtnCancel: {
-    backgroundColor: "#2c2c3f",
+    backgroundColor: "#ECEFF1",
   },
   dialogBtnConfirm: {
-    backgroundColor: "#9C27B0",
+    backgroundColor: "#1565C0",
   },
   dialogBtnText: {
     color: "#fff",
+    fontWeight: "bold",
+    fontSize: 14,
+  },
+  dialogBtnTextDark: {
+    color: "#111",
     fontWeight: "bold",
     fontSize: 14,
   },
