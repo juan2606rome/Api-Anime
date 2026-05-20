@@ -2,7 +2,6 @@ import * as ImagePicker from "expo-image-picker";
 import { useContext, useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Image,
   Modal,
@@ -38,27 +37,21 @@ interface Props {
   onEliminarAnime?: () => void;
 }
 
-const FORM_VACIO = { nombre: "", edad: "", poder_tecnica: "", nacionalidad: "" };
-
-// ── Helpers Seguros para Web (Netlify/Render) y Móvil ───────────────────────
-const mostrarAlerta = (titulo: string, mensaje: string) => {
-  if (Platform.OS === "web") {
-    window.alert(`${titulo}: ${mensaje}`);
-  } else {
-    Alert.alert(titulo, mensaje);
-  }
+const FORM_VACIO = {
+  nombre: "",
+  edad: "",
+  poder_tecnica: "",
+  nacionalidad: "",
 };
 
-const confirmarAccion = (titulo: string, mensaje: string, alConfirmar: () => void) => {
-  if (Platform.OS === "web") {
-    const res = window.confirm(`${titulo}\n\n${mensaje}`);
-    if (res) alConfirmar();
-  } else {
-    Alert.alert(titulo, mensaje, [
-      { text: "Cancelar", style: "cancel" },
-      { text: "Sí, continuar", style: "destructive", onPress: alConfirmar },
-    ]);
-  }
+type Dialogo = {
+  visible: boolean;
+  tipo: "info" | "confirm";
+  titulo: string;
+  mensaje: string;
+  onConfirm?: () => void;
+  textoConfirmar?: string;
+  textoCancelar?: string;
 };
 
 export default function AnimePersonalizadoView({
@@ -67,10 +60,8 @@ export default function AnimePersonalizadoView({
   visible = true,
   onEliminarAnime,
 }: Props) {
-  // ── Contexto ────────────────────────────────────────────────────────────────
   const { setConsultasPersonalizadas } = useContext(ContextoConstante);
 
-  // ── Estado local ────────────────────────────────────────────────────────────
   const [personajes, setPersonajes] = useState<Personaje[]>([]);
   const [loading, setLoading] = useState(false);
   const [texto, setTexto] = useState("");
@@ -85,7 +76,48 @@ export default function AnimePersonalizadoView({
   const [eliminando, setEliminando] = useState(false);
   const [error, setError] = useState("");
 
-  // Cuando cambia el anime, resetear todo el estado local
+  const [dialogo, setDialogo] = useState<Dialogo>({
+    visible: false,
+    tipo: "info",
+    titulo: "",
+    mensaje: "",
+  });
+
+  function cerrarDialogo() {
+    setDialogo((prev) => ({
+      ...prev,
+      visible: false,
+      onConfirm: undefined,
+    }));
+  }
+
+  function mostrarInfo(titulo: string, mensaje: string) {
+    setDialogo({
+      visible: true,
+      tipo: "info",
+      titulo,
+      mensaje,
+    });
+  }
+
+  function mostrarConfirm(
+    titulo: string,
+    mensaje: string,
+    onConfirm: () => void,
+    textoConfirmar = "Sí, continuar",
+    textoCancelar = "Cancelar"
+  ) {
+    setDialogo({
+      visible: true,
+      tipo: "confirm",
+      titulo,
+      mensaje,
+      onConfirm,
+      textoConfirmar,
+      textoCancelar,
+    });
+  }
+
   useEffect(() => {
     setTexto("");
     setPersonajeActual(null);
@@ -96,7 +128,6 @@ export default function AnimePersonalizadoView({
     cargarPersonajes();
   }, [animeKey]);
 
-  // ── Helpers ─────────────────────────────────────────────────────────────────
   async function cargarPersonajes() {
     setLoading(true);
     try {
@@ -132,14 +163,19 @@ export default function AnimePersonalizadoView({
     guardarEnResumen(p);
   }
 
-  // ── Buscar ──────────────────────────────────────────────────────────────────
   async function buscarPersonaje() {
     const busqueda = texto.trim();
-    if (!busqueda) { setError("Escribe un nombre o un ID"); return; }
+    if (!busqueda) {
+      setError("Escribe un nombre o un ID");
+      return;
+    }
+
     setError("");
 
     try {
-      const res = await fetch(`${API_URL}/anime/${animeKey}/${encodeURIComponent(busqueda.toLowerCase())}`);
+      const res = await fetch(
+        `${API_URL}/anime/${animeKey}/${encodeURIComponent(busqueda.toLowerCase())}`
+      );
       const data = await res.json();
 
       if (!res.ok || data.error) {
@@ -160,11 +196,10 @@ export default function AnimePersonalizadoView({
     }
   }
 
-  // ── Imagen picker ────────────────────────────────────────────────────────────
   async function seleccionarImagen(index: number) {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (status !== "granted") {
-      mostrarAlerta("Permiso denegado", "Necesitamos acceso a tu galería de fotos.");
+      mostrarInfo("Permiso denegado", "Necesitamos acceso a tu galería de fotos.");
       return;
     }
 
@@ -184,7 +219,6 @@ export default function AnimePersonalizadoView({
     }
   }
 
-  // ── Formulario agregar / editar ──────────────────────────────────────────────
   function abrirFormAgregar() {
     setForm(FORM_VACIO);
     setFormImgs([null, null, null, null]);
@@ -206,10 +240,11 @@ export default function AnimePersonalizadoView({
   }
 
   async function guardarPersonaje() {
-    if (!form.nombre.trim()) { 
-      mostrarAlerta("Error", "El nombre es obligatorio"); 
-      return; 
+    if (!form.nombre.trim()) {
+      mostrarInfo("Error", "El nombre es obligatorio");
+      return;
     }
+
     setGuardando(true);
 
     const body: Record<string, any> = {
@@ -218,15 +253,18 @@ export default function AnimePersonalizadoView({
       poder_tecnica: form.poder_tecnica,
       nacionalidad: form.nacionalidad,
     };
+
     if (formImgs[0]) body.imagen1 = formImgs[0];
     if (formImgs[1]) body.imagen2 = formImgs[1];
     if (formImgs[2]) body.imagen3 = formImgs[2];
     if (formImgs[3]) body.imagen4 = formImgs[3];
 
     try {
-      const urlFetch = editando && personajeActual
-        ? `${API_URL}/anime/${animeKey}/${personajeActual.id}`
-        : `${API_URL}/anime/${animeKey}`;
+      const urlFetch =
+        editando && personajeActual
+          ? `${API_URL}/anime/${animeKey}/${personajeActual.id}`
+          : `${API_URL}/anime/${animeKey}`;
+
       const method = editando ? "PUT" : "POST";
 
       const res = await fetch(urlFetch, {
@@ -234,66 +272,74 @@ export default function AnimePersonalizadoView({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });
+
       const data = await res.json();
 
       if (data.ok) {
-        mostrarAlerta("✅ Éxito", editando ? "Personaje actualizado" : "Personaje agregado");
         setModalForm(false);
         setPersonajeActual(null);
         setTexto("");
         await cargarPersonajes();
-        if (data.personaje) guardarEnResumen(data.personaje);
+
+        if (data.personaje) {
+          guardarEnResumen(data.personaje);
+        }
+
+        mostrarInfo(
+          "✅ Éxito",
+          editando ? "Personaje actualizado correctamente." : "Personaje agregado correctamente."
+        );
       } else {
-        mostrarAlerta("Error al guardar", data.error ?? "No se pudo guardar");
+        mostrarInfo("Error al guardar", data.error ?? "No se pudo guardar");
       }
-    } catch (err) {
-      mostrarAlerta("Error", "Error de conexión al guardar");
+    } catch {
+      mostrarInfo("Error", "Error de conexión al guardar");
     } finally {
       setGuardando(false);
     }
   }
 
-  // ── ELIMINAR PERSONAJE ───────────────────────────────────────────────────────
   function confirmarEliminarPersonaje(id: number) {
-    confirmarAccion(
+    mostrarConfirm(
       "🗑️ Eliminar personaje",
       "¿Seguro que quieres eliminar este personaje? Esta acción no se puede deshacer.",
-      () => ejecutarEliminarPersonaje(id)
+      () => ejecutarEliminarPersonaje(id),
+      "Sí, eliminar"
     );
   }
 
   async function ejecutarEliminarPersonaje(id: number) {
     setEliminando(true);
     try {
-      const res = await fetch(`${API_URL}/anime/${animeKey}/${id}`, { method: "DELETE" });
+      const res = await fetch(`${API_URL}/anime/${animeKey}/${id}`, {
+        method: "DELETE",
+      });
       const data = await res.json();
 
       if (data.ok) {
         setPersonajeActual(null);
         setTexto("");
         setImagenes([]);
-        setConsultasPersonalizadas((prev: any[]) => prev.filter((x) => x.nombre_clave !== animeKey));
+        setConsultasPersonalizadas((prev: any[]) =>
+          prev.filter((x) => x.nombre_clave !== animeKey)
+        );
         await cargarPersonajes();
-        mostrarAlerta("✅ Eliminado", "El personaje fue eliminado correctamente.");
+        mostrarInfo("✅ Eliminado", "El personaje fue eliminado correctamente.");
       } else {
-        mostrarAlerta("Error al eliminar", data.error ?? "No se pudo eliminar el personaje.");
+        mostrarInfo("Error al eliminar", data.error ?? "No se pudo eliminar el personaje.");
       }
     } catch {
-      mostrarAlerta("Error", "Error de conexión al intentar eliminar.");
+      mostrarInfo("Error", "Error de conexión al intentar eliminar.");
     } finally {
       setEliminando(false);
     }
   }
 
-  // ─────────────────────────────────────────────────────────────────────────────
-  // RENDER
-  // ─────────────────────────────────────────────────────────────────────────────
   return (
     <View style={[styles.container, !visible && styles.hidden]}>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <Text style={styles.title}>✨ {titulo}</Text>
 
-        {/* Buscador */}
         <TextInput
           style={styles.input}
           placeholder="Buscar por nombre o ID..."
@@ -304,30 +350,36 @@ export default function AnimePersonalizadoView({
           returnKeyType="search"
         />
 
-        {/* Botones principales */}
         <View style={styles.botonesRow}>
           <Pressable style={[styles.btn, { backgroundColor: "#9C27B0" }]} onPress={buscarPersonaje}>
             <Text style={styles.btnText}>🔍 Buscar</Text>
           </Pressable>
+
           <Pressable style={[styles.btn, { backgroundColor: "#27AE60" }]} onPress={abrirFormAgregar}>
             <Text style={styles.btnText}>＋ Agregar</Text>
           </Pressable>
-          {onEliminarAnime && (
-            <Pressable style={[styles.btn, { backgroundColor: "#C0392B" }]} onPress={onEliminarAnime}>
-              <Text style={styles.btnText}>🗑️ Eliminar Anime</Text>
-            </Pressable>
-          )}
         </View>
 
         {error !== "" && <Text style={styles.textoError}>{error}</Text>}
 
-        {/* Personaje seleccionado */}
         {personajeActual && (
           <Tarjeta>
-            <Text style={styles.text}><Text style={styles.label}>Nombre: </Text>{personajeActual.nombre}</Text>
-            <Text style={styles.text}><Text style={styles.label}>Edad: </Text>{personajeActual.edad}</Text>
-            <Text style={styles.text}><Text style={styles.label}>Poder/Técnica: </Text>{personajeActual.poder_tecnica}</Text>
-            <Text style={styles.text}><Text style={styles.label}>Nacionalidad: </Text>{personajeActual.nacionalidad}</Text>
+            <Text style={styles.text}>
+              <Text style={styles.label}>Nombre: </Text>
+              {personajeActual.nombre}
+            </Text>
+            <Text style={styles.text}>
+              <Text style={styles.label}>Edad: </Text>
+              {personajeActual.edad}
+            </Text>
+            <Text style={styles.text}>
+              <Text style={styles.label}>Poder/Técnica: </Text>
+              {personajeActual.poder_tecnica}
+            </Text>
+            <Text style={styles.text}>
+              <Text style={styles.label}>Nacionalidad: </Text>
+              {personajeActual.nacionalidad}
+            </Text>
 
             {personajeActual.imagen1 && (
               <Image
@@ -336,7 +388,7 @@ export default function AnimePersonalizadoView({
               />
             )}
 
-            <View style={{ gap: 8, marginTop: 14, width: "100%" }}>
+            <View style={styles.accionesCard}>
               {imagenes.length > 0 && (
                 <Pressable
                   style={[styles.btn, { backgroundColor: "#4682B4" }]}
@@ -345,6 +397,7 @@ export default function AnimePersonalizadoView({
                   <Text style={styles.btnText}>🖼️ Ver Galería ({imagenes.length})</Text>
                 </Pressable>
               )}
+
               <Pressable
                 style={[styles.btn, { backgroundColor: "#F39C12" }]}
                 onPress={() => abrirFormEditar(personajeActual)}
@@ -352,7 +405,6 @@ export default function AnimePersonalizadoView({
                 <Text style={styles.btnText}>✏️ Editar</Text>
               </Pressable>
 
-              {/* BOTÓN ELIMINAR PERSONAJE */}
               {eliminando ? (
                 <ActivityIndicator color="#E74C3C" style={{ marginTop: 4 }} />
               ) : (
@@ -363,14 +415,22 @@ export default function AnimePersonalizadoView({
                   <Text style={styles.btnText}>🗑️ Eliminar Personaje</Text>
                 </Pressable>
               )}
+
+              {onEliminarAnime && (
+                <View style={styles.eliminarAnimeWrap}>
+                  <Pressable
+                    style={[styles.btn, styles.btnEliminarAnime]}
+                    onPress={onEliminarAnime}
+                  >
+                    <Text style={styles.btnText}>🗑️ Eliminar Anime</Text>
+                  </Pressable>
+                </View>
+              )}
             </View>
           </Tarjeta>
         )}
 
-        {/* Lista de todos los personajes */}
-        <Text style={styles.listaTitle}>
-          Todos los personajes ({personajes.length})
-        </Text>
+        <Text style={styles.listaTitle}>Todos los personajes ({personajes.length})</Text>
 
         {loading ? (
           <ActivityIndicator color="#9C27B0" size="large" style={{ marginTop: 20 }} />
@@ -392,19 +452,20 @@ export default function AnimePersonalizadoView({
                   <Text style={{ fontSize: 22 }}>✨</Text>
                 </View>
               )}
+
               <View style={{ flex: 1 }}>
                 <Text style={styles.personajeNombre}>{p.nombre}</Text>
                 <Text style={styles.personajeInfo} numberOfLines={1}>
                   {p.poder_tecnica || "Sin técnica registrada"}
                 </Text>
               </View>
+
               <Text style={{ color: "#9C27B0", fontSize: 20 }}>›</Text>
             </Pressable>
           ))
         )}
       </ScrollView>
 
-      {/* ════ MODAL GALERÍA ══════════════════════════════════════════════════ */}
       <Modal
         animationType="slide"
         transparent
@@ -419,6 +480,7 @@ export default function AnimePersonalizadoView({
                 <Text style={styles.cerrarBtn}>✕</Text>
               </Pressable>
             </View>
+
             <FlatList
               horizontal
               showsHorizontalScrollIndicator={Platform.OS === "web"}
@@ -435,7 +497,6 @@ export default function AnimePersonalizadoView({
         </View>
       </Modal>
 
-      {/* ════ MODAL FORMULARIO AGREGAR / EDITAR ═════════════════════════════ */}
       <Modal
         animationType="slide"
         transparent
@@ -514,13 +575,17 @@ export default function AnimePersonalizadoView({
                 ) : (
                   <>
                     <Pressable
-                      style={[styles.formBtn, { backgroundColor: editando ? "#F39C12" : "#27AE60" }]}
+                      style={[
+                        styles.formBtn,
+                        { backgroundColor: editando ? "#F39C12" : "#27AE60" },
+                      ]}
                       onPress={guardarPersonaje}
                     >
                       <Text style={styles.formBtnText}>
                         {editando ? "Actualizar Personaje" : "Guardar Personaje"}
                       </Text>
                     </Pressable>
+
                     <Pressable
                       style={[styles.formBtn, { backgroundColor: "#444" }]}
                       onPress={() => setModalForm(false)}
@@ -534,97 +599,305 @@ export default function AnimePersonalizadoView({
           </View>
         </View>
       </Modal>
+
+      <Modal
+        animationType="fade"
+        transparent
+        visible={dialogo.visible}
+        onRequestClose={cerrarDialogo}
+      >
+        <Pressable
+          style={styles.dialogOverlay}
+          onPress={dialogo.tipo === "info" ? cerrarDialogo : undefined}
+        >
+          <Pressable style={styles.dialogBox} onPress={(e) => e.stopPropagation()}>
+            <Text style={styles.dialogTitle}>{dialogo.titulo}</Text>
+            <Text style={styles.dialogMessage}>{dialogo.mensaje}</Text>
+
+            <View style={styles.dialogButtons}>
+              {dialogo.tipo === "confirm" ? (
+                <>
+                  <Pressable
+                    style={[styles.dialogBtn, styles.dialogBtnCancel]}
+                    onPress={cerrarDialogo}
+                  >
+                    <Text style={styles.dialogBtnText}>
+                      {dialogo.textoCancelar ?? "Cancelar"}
+                    </Text>
+                  </Pressable>
+
+                  <Pressable
+                    style={[styles.dialogBtn, styles.dialogBtnConfirm]}
+                    onPress={() => {
+                      const accion = dialogo.onConfirm;
+                      cerrarDialogo();
+                      accion?.();
+                    }}
+                  >
+                    <Text style={styles.dialogBtnText}>
+                      {dialogo.textoConfirmar ?? "Sí, continuar"}
+                    </Text>
+                  </Pressable>
+                </>
+              ) : (
+                <Pressable
+                  style={[styles.dialogBtn, styles.dialogBtnConfirm, { minWidth: 120 }]}
+                  onPress={cerrarDialogo}
+                >
+                  <Text style={styles.dialogBtnText}>Aceptar</Text>
+                </Pressable>
+              )}
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container:    { flex: 1, backgroundColor: "#0a0a1a" },
-  hidden:       { display: "none" },
-  scrollContent:{ padding: 20, paddingBottom: 50 },
+  container: { flex: 1, backgroundColor: "#0a0a1a" },
+  hidden: { display: "none" },
+  scrollContent: { padding: 20, paddingBottom: 50 },
 
   title: {
-    fontSize: 24, fontWeight: "bold",
-    color: "#9C27B0", marginBottom: 20, textAlign: "center",
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#9C27B0",
+    marginBottom: 20,
+    textAlign: "center",
   },
   input: {
-    width: "100%", borderWidth: 1, borderColor: "#9C27B0",
-    borderRadius: 10, padding: 12, marginBottom: 12,
-    backgroundColor: "#fff", fontSize: 15,
+    width: "100%",
+    borderWidth: 1,
+    borderColor: "#9C27B0",
+    borderRadius: 10,
+    padding: 12,
+    marginBottom: 12,
+    backgroundColor: "#fff",
+    fontSize: 15,
   },
   botonesRow: {
-    flexDirection: "row", gap: 8, marginBottom: 15, flexWrap: "wrap",
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 15,
+    flexWrap: "wrap",
   },
   btn: {
-    paddingVertical: 10, paddingHorizontal: 14,
-    borderRadius: 8, alignItems: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+    alignItems: "center",
   },
   btnText: { color: "#fff", fontWeight: "bold", fontSize: 13 },
 
-  label:      { fontWeight: "bold" },
-  textoError: { color: "#ff4d4d", fontWeight: "bold", marginBottom: 10, textAlign: "center" },
-  text:       { marginTop: 10, fontSize: 15, color: "#111" },
+  label: { fontWeight: "bold" },
+  textoError: {
+    color: "#ff4d4d",
+    fontWeight: "bold",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  text: { marginTop: 10, fontSize: 15, color: "#111" },
 
-  listaTitle: { color: "#666", marginTop: 25, marginBottom: 10, fontSize: 13 },
-  listaVacia: { color: "#555", fontStyle: "italic", textAlign: "center", marginTop: 20, padding: 10 },
+  accionesCard: {
+    gap: 8,
+    marginTop: 14,
+    width: "100%",
+  },
+  eliminarAnimeWrap: {
+    width: "100%",
+    alignItems: "flex-end",
+    marginTop: 2,
+  },
+  btnEliminarAnime: {
+    backgroundColor: "#C0392B",
+    alignSelf: "flex-end",
+  },
+
+  listaTitle: {
+    color: "#666",
+    marginTop: 25,
+    marginBottom: 10,
+    fontSize: 13,
+  },
+  listaVacia: {
+    color: "#555",
+    fontStyle: "italic",
+    textAlign: "center",
+    marginTop: 20,
+    padding: 10,
+  },
 
   personajeItem: {
-    flexDirection: "row", alignItems: "center",
-    backgroundColor: "#141420", borderRadius: 12,
-    padding: 12, marginBottom: 8,
-    borderWidth: 1, borderColor: "#2a2a3a", gap: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#141420",
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: "#2a2a3a",
+    gap: 12,
   },
   personajeImg: { width: 52, height: 52, borderRadius: 10 },
   personajeImgPlaceholder: {
-    backgroundColor: "#2a2a3a", justifyContent: "center", alignItems: "center",
+    backgroundColor: "#2a2a3a",
+    justifyContent: "center",
+    alignItems: "center",
   },
   personajeNombre: { color: "#fff", fontWeight: "bold", fontSize: 15 },
-  personajeInfo:   { color: "#666", fontSize: 12, marginTop: 2 },
+  personajeInfo: { color: "#666", fontSize: 12, marginTop: 2 },
 
   modalOverlay: {
-    flex: 1, backgroundColor: "rgba(0,0,0,0.75)", justifyContent: "flex-end",
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.75)",
+    justifyContent: "flex-end",
   },
   modalContent: {
-    height: "38%", backgroundColor: "#1a1a2e",
-    borderTopRightRadius: 20, borderTopLeftRadius: 20,
+    height: "38%",
+    backgroundColor: "#1a1a2e",
+    borderTopRightRadius: 20,
+    borderTopLeftRadius: 20,
   },
   modalHeader: {
-    height: 52, borderTopRightRadius: 20, borderTopLeftRadius: 20,
+    height: 52,
+    borderTopRightRadius: 20,
+    borderTopLeftRadius: 20,
     paddingHorizontal: 20,
-    flexDirection: "row", alignItems: "center", justifyContent: "space-between",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
   },
   modalTitle: { color: "#fff", fontSize: 16, fontWeight: "bold" },
-  cerrarBtn:  { color: "#fff", fontSize: 24, fontWeight: "bold" },
+  cerrarBtn: { color: "#fff", fontSize: 24, fontWeight: "bold" },
 
   galeriaList: { paddingVertical: 18, paddingHorizontal: 10 },
   galeriaItem: {
-    backgroundColor: "#fff", borderRadius: 14,
-    padding: 5, marginHorizontal: 8, elevation: 4,
+    backgroundColor: "#fff",
+    borderRadius: 14,
+    padding: 5,
+    marginHorizontal: 8,
+    elevation: 4,
   },
   galeriaImg: { width: 155, height: 155 },
 
   formOverlay: {
-    flex: 1, backgroundColor: "rgba(0,0,0,0.92)", justifyContent: "flex-end",
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.92)",
+    justifyContent: "flex-end",
   },
   formContent: {
-    height: "94%", backgroundColor: "#111120",
-    borderTopRightRadius: 22, borderTopLeftRadius: 22,
+    height: "94%",
+    backgroundColor: "#111120",
+    borderTopRightRadius: 22,
+    borderTopLeftRadius: 22,
   },
-  formLabel: { color: "#888", fontSize: 13, marginBottom: 5, marginTop: 2 },
+  formLabel: {
+    color: "#888",
+    fontSize: 13,
+    marginBottom: 5,
+    marginTop: 2,
+  },
   formInput: {
-    borderWidth: 1, borderColor: "#2a2a3a", borderRadius: 10,
-    padding: 12, color: "#fff", backgroundColor: "#0d0d1a",
-    marginBottom: 14, fontSize: 15,
+    borderWidth: 1,
+    borderColor: "#2a2a3a",
+    borderRadius: 10,
+    padding: 12,
+    color: "#fff",
+    backgroundColor: "#0d0d1a",
+    marginBottom: 14,
+    fontSize: 15,
   },
-  imagenesGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
+  imagenesGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
   imagenSlot: {
-    width: "47%", height: 120,
-    backgroundColor: "#1a1a2e", borderRadius: 10,
-    borderWidth: 1, borderColor: "#333", borderStyle: "dashed",
-    justifyContent: "center", alignItems: "center",
+    width: "47%",
+    height: 120,
+    backgroundColor: "#1a1a2e",
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "#333",
+    borderStyle: "dashed",
+    justifyContent: "center",
+    alignItems: "center",
   },
-  imagenSlotText:  { color: "#555", textAlign: "center", fontSize: 13 },
-  imagenPreview:   { width: "100%", height: "100%", borderRadius: 10 },
-  formBtn:         { padding: 14, borderRadius: 10, alignItems: "center" },
-  formBtnText:     { color: "#fff", fontWeight: "bold", fontSize: 16 },
+  imagenSlotText: {
+    color: "#555",
+    textAlign: "center",
+    fontSize: 13,
+  },
+  imagenPreview: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 10,
+  },
+  formBtn: {
+    padding: 14,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  formBtnText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
+  },
+
+  dialogOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.72)",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 22,
+  },
+  dialogBox: {
+    width: "100%",
+    maxWidth: 420,
+    backgroundColor: "#111120",
+    borderRadius: 18,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: "#333",
+  },
+  dialogTitle: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
+    marginBottom: 10,
+    textAlign: "center",
+  },
+  dialogMessage: {
+    color: "#cfcfe6",
+    fontSize: 14,
+    lineHeight: 20,
+    textAlign: "center",
+  },
+  dialogButtons: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 10,
+    marginTop: 18,
+    flexWrap: "wrap",
+  },
+  dialogBtn: {
+    minWidth: 120,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  dialogBtnCancel: {
+    backgroundColor: "#2c2c3f",
+  },
+  dialogBtnConfirm: {
+    backgroundColor: "#9C27B0",
+  },
+  dialogBtnText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 14,
+  },
 });
