@@ -1,5 +1,6 @@
 require("dotenv").config();
 const http = require("node:http");
+const format = require("pg-format");
 const { Client } = require("pg");
 
 // ─── CONFIGURACIÓN DE BASE DE DATOS ──────────────────────────────────────────
@@ -38,7 +39,9 @@ const TABLAS_FIJAS = {
   onepiece: "onepiece_personajes",
 };
 
-// ─── VALIDACIÓN DE NOMBRE DE TABLA (previene SQL injection) ──────────────────
+const COLUMNAS_PERSONAJE = "nombre, edad, poder_tecnica, nacionalidad, imagen1, imagen2, imagen3, imagen4";
+
+// ─── VALIDACIÓN DE NOMBRE DE TABLA ───────────────────────────────────────────
 function esTablaValida(tabla) {
   const tablasDelSistema = new Set(Object.values(TABLAS_FIJAS));
   if (tablasDelSistema.has(tabla)) return true;
@@ -46,9 +49,7 @@ function esTablaValida(tabla) {
 }
 
 function validarTablaOLanzar(tabla) {
-  if (!esTablaValida(tabla)) {
-    throw new Error(`Nombre de tabla no permitido: "${tabla}"`);
-  }
+  if (!esTablaValida(tabla)) throw new Error(`Nombre de tabla no permitido: "${tabla}"`);
 }
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
@@ -68,10 +69,6 @@ function normalizarAnimeKey(valor) {
   }
 }
 
-function escaparIdentificador(texto) {
-  return String(texto).replaceAll('"', '""');
-}
-
 function safeDecode(texto) {
   try {
     return decodeURIComponent(String(texto || ""));
@@ -81,19 +78,8 @@ function safeDecode(texto) {
 }
 
 function buildUpdatePersonaje(body) {
-  const sets = [
-    "nombre = $1",
-    "edad = $2",
-    "poder_tecnica = $3",
-    "nacionalidad = $4",
-  ];
-
-  const valores = [
-    body.nombre.trim(),
-    body.edad || null,
-    body.poder_tecnica || null,
-    body.nacionalidad || null,
-  ];
+  const sets = ["nombre = $1", "edad = $2", "poder_tecnica = $3", "nacionalidad = $4"];
+  const valores = [body.nombre.trim(), body.edad || null, body.poder_tecnica || null, body.nacionalidad || null];
 
   const imagenes = [
     ["imagen1", body.imagen1],
@@ -137,10 +123,8 @@ async function crearTablaAnimesPersonalizados() {
 
 async function crearTablaPersonajes(tabla) {
   validarTablaOLanzar(tabla);
-  const t = escaparIdentificador(tabla);
-  // NOSONAR
-  await client.query(`
-    CREATE TABLE IF NOT EXISTS "${t}" (
+  await client.query(format(`
+    CREATE TABLE IF NOT EXISTS %I (
       id            SERIAL PRIMARY KEY,
       nombre        TEXT NOT NULL,
       edad          TEXT,
@@ -151,7 +135,7 @@ async function crearTablaPersonajes(tabla) {
       imagen3       TEXT,
       imagen4       TEXT
     )
-  `);
+  `, tabla));
 }
 
 async function inicializarBaseDatos() {
@@ -175,7 +159,6 @@ async function inicializarBaseDatos() {
 async function getTabla(anime) {
   const animeKey = normalizarAnimeKey(anime);
   if (!animeKey) return null;
-
   if (TABLAS_FIJAS[animeKey]) return TABLAS_FIJAS[animeKey];
 
   try {
@@ -194,13 +177,11 @@ async function getTabla(anime) {
 async function eliminarAnimeCompleto(clave) {
   const tabla = `custom_${clave}_personajes`;
   validarTablaOLanzar(tabla);
-  const t = escaparIdentificador(tabla);
 
   console.log(`🗑️  Eliminando anime "${clave}" → tabla "${tabla}"`);
   await client.query("BEGIN");
   try {
-    // NOSONAR
-    await client.query(`DROP TABLE IF EXISTS "${t}"`);
+    await client.query(format("DROP TABLE IF EXISTS %I", tabla));
     const r = await client.query(
       "DELETE FROM animes_personalizados WHERE nombre_clave = $1 RETURNING nombre_clave",
       [clave]
@@ -216,42 +197,19 @@ async function eliminarAnimeCompleto(clave) {
 
 async function compactarIdsTabla(tabla) {
   validarTablaOLanzar(tabla);
-  const t = escaparIdentificador(tabla);
-  const columnas = [
-    "nombre",
-    "edad",
-    "poder_tecnica",
-    "nacionalidad",
-    "imagen1",
-    "imagen2",
-    "imagen3",
-    "imagen4",
-  ];
 
-  // NOSONAR
   const result = await client.query(
-    `SELECT ${columnas.join(", ")} FROM "${t}" ORDER BY id ASC`
+    format(`SELECT ${COLUMNAS_PERSONAJE} FROM %I ORDER BY id ASC`, tabla)
   );
   const filas = result.rows;
 
-  // NOSONAR
-  await client.query(`TRUNCATE TABLE "${t}" RESTART IDENTITY`);
+  await client.query(format("TRUNCATE TABLE %I RESTART IDENTITY", tabla));
 
   for (const fila of filas) {
-    // NOSONAR
     await client.query(
-      `INSERT INTO "${t}" (${columnas.join(", ")}) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
-      [
-        fila.nombre,
-        fila.edad,
-        fila.poder_tecnica,
-        fila.nacionalidad,
-        fila.imagen1,
-        fila.imagen2,
-        fila.imagen3,
-        fila.imagen4,
-      ]
-    );
+      format(`INSERT INTO %I (${COLUMNAS_PERSONAJE}) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`, tabla),
+      [fila.nombre, fila.edad, fila.poder_tecnica, fila.nacionalidad, fila.imagen1, fila.imagen2, fila.imagen3, fila.imagen4]
+    ); // eslint-disable-line no-await-in-loop
   }
 }
 
@@ -259,15 +217,9 @@ async function compactarIdsTabla(tabla) {
 function parseBody(req) {
   return new Promise((resolve) => {
     let body = "";
-    req.on("data", (chunk) => {
-      body += chunk.toString();
-    });
+    req.on("data", (chunk) => { body += chunk.toString(); });
     req.on("end", () => {
-      try {
-        resolve(JSON.parse(body || "{}"));
-      } catch {
-        resolve({});
-      }
+      try { resolve(JSON.parse(body || "{}")); } catch { resolve({}); }
     });
     req.on("error", () => resolve({}));
   });
@@ -461,19 +413,11 @@ function handleRoot(res) {
 async function handleLogin(req, res) {
   const body = await parseBody(req);
   const { usuario, contrasena } = body;
-
-  if (!usuario?.trim() || !contrasena?.trim()) {
-    return sendJSON(res, 400, { error: "Faltan usuario o contraseña" });
-  }
+  if (!usuario?.trim() || !contrasena?.trim()) return sendJSON(res, 400, { error: "Faltan usuario o contraseña" });
 
   try {
-    const result = await client.query(
-      "SELECT * FROM usuarios WHERE usuario = $1 AND contrasena = $2",
-      [usuario, contrasena]
-    );
-    if (result.rows[0]) {
-      return sendJSON(res, 200, { ok: true, usuario: result.rows[0].usuario });
-    }
+    const result = await client.query("SELECT * FROM usuarios WHERE usuario = $1 AND contrasena = $2", [usuario, contrasena]);
+    if (result.rows[0]) return sendJSON(res, 200, { ok: true, usuario: result.rows[0].usuario });
     return sendJSON(res, 401, { error: "Usuario o contraseña incorrectos" });
   } catch (err) {
     console.error("Login error:", err.message);
@@ -484,21 +428,13 @@ async function handleLogin(req, res) {
 async function handleRegister(req, res) {
   const body = await parseBody(req);
   const { usuario, contrasena } = body;
-
-  if (!usuario?.trim() || !contrasena?.trim()) {
-    return sendJSON(res, 400, { error: "Faltan usuario o contraseña" });
-  }
+  if (!usuario?.trim() || !contrasena?.trim()) return sendJSON(res, 400, { error: "Faltan usuario o contraseña" });
 
   try {
-    await client.query(
-      "INSERT INTO usuarios (usuario, contrasena) VALUES ($1, $2)",
-      [usuario.trim(), contrasena]
-    );
+    await client.query("INSERT INTO usuarios (usuario, contrasena) VALUES ($1, $2)", [usuario.trim(), contrasena]);
     return sendJSON(res, 201, { ok: true });
   } catch (err) {
-    if (err.code === "23505") {
-      return sendJSON(res, 409, { error: "El usuario ya existe" });
-    }
+    if (err.code === "23505") return sendJSON(res, 409, { error: "El usuario ya existe" });
     console.error("Register error:", err.message);
     return sendJSON(res, 500, { error: err.message });
   }
@@ -510,9 +446,7 @@ function handleGetAnimesFijos(res) {
 
 async function handleGetAnimesPersonalizados(res) {
   try {
-    const result = await client.query(
-      "SELECT nombre_clave, nombre_display FROM animes_personalizados ORDER BY creado_en ASC"
-    );
+    const result = await client.query("SELECT nombre_clave, nombre_display FROM animes_personalizados ORDER BY creado_en ASC");
     return sendJSON(res, 200, result.rows);
   } catch (err) {
     console.error("Listar personalizados error:", err.message);
@@ -523,29 +457,18 @@ async function handleGetAnimesPersonalizados(res) {
 async function handleCrearAnime(req, res) {
   const body = await parseBody(req);
   const { nombre } = body;
-
-  if (!nombre?.trim()) {
-    return sendJSON(res, 400, { error: "El nombre del anime es obligatorio" });
-  }
+  if (!nombre?.trim()) return sendJSON(res, 400, { error: "El nombre del anime es obligatorio" });
 
   const nombre_display = nombre.trim();
   const nombre_clave = sanitizarClave(nombre_display);
-
-  if (!nombre_clave) {
-    return sendJSON(res, 400, { error: "Nombre inválido. Usa letras y números." });
-  }
-  if (TABLAS_FIJAS[nombre_clave]) {
-    return sendJSON(res, 409, { error: "Ese nombre ya es un anime fijo del sistema." });
-  }
+  if (!nombre_clave) return sendJSON(res, 400, { error: "Nombre inválido. Usa letras y números." });
+  if (TABLAS_FIJAS[nombre_clave]) return sendJSON(res, 409, { error: "Ese nombre ya es un anime fijo del sistema." });
 
   const tablaNueva = `custom_${nombre_clave}_personajes`;
 
   try {
     await client.query("BEGIN");
-    await client.query(
-      "INSERT INTO animes_personalizados (nombre_clave, nombre_display) VALUES ($1, $2)",
-      [nombre_clave, nombre_display]
-    );
+    await client.query("INSERT INTO animes_personalizados (nombre_clave, nombre_display) VALUES ($1, $2)", [nombre_clave, nombre_display]);
     await crearTablaPersonajes(tablaNueva);
     await client.query("COMMIT");
 
@@ -553,9 +476,7 @@ async function handleCrearAnime(req, res) {
     return sendJSON(res, 201, { ok: true, nombre_clave, nombre_display, tabla: tablaNueva });
   } catch (err) {
     await client.query("ROLLBACK");
-    if (err.code === "23505") {
-      return sendJSON(res, 409, { error: `El anime "${nombre_display}" ya existe.` });
-    }
+    if (err.code === "23505") return sendJSON(res, 409, { error: `El anime "${nombre_display}" ya existe.` });
     console.error("Crear anime error:", err.message);
     return sendJSON(res, 500, { error: err.message });
   }
@@ -563,18 +484,11 @@ async function handleCrearAnime(req, res) {
 
 async function handleEliminarAnime(res, animeKey) {
   if (!animeKey) return sendJSON(res, 400, { error: "Anime inválido" });
-  if (TABLAS_FIJAS[animeKey]) {
-    return sendJSON(res, 400, { error: "No puedes eliminar un anime fijo del sistema." });
-  }
+  if (TABLAS_FIJAS[animeKey]) return sendJSON(res, 400, { error: "No puedes eliminar un anime fijo del sistema." });
 
   try {
-    const existe = await client.query(
-      "SELECT nombre_clave FROM animes_personalizados WHERE nombre_clave = $1",
-      [animeKey]
-    );
-    if (!existe.rows[0]) {
-      return sendJSON(res, 404, { error: "Anime no encontrado." });
-    }
+    const existe = await client.query("SELECT nombre_clave FROM animes_personalizados WHERE nombre_clave = $1", [animeKey]);
+    if (!existe.rows[0]) return sendJSON(res, 404, { error: "Anime no encontrado." });
     await eliminarAnimeCompleto(animeKey);
     return sendJSON(res, 200, { ok: true });
   } catch (err) {
@@ -586,8 +500,7 @@ async function handleEliminarAnime(res, animeKey) {
 async function handleListarPersonajes(res, tabla) {
   try {
     validarTablaOLanzar(tabla);
-    const t = escaparIdentificador(tabla);
-    const result = await client.query(`SELECT * FROM "${t}" ORDER BY id ASC`); // NOSONAR
+    const result = await client.query(format("SELECT * FROM %I ORDER BY id ASC", tabla));
     return sendJSON(res, 200, result.rows);
   } catch (err) {
     console.error("Listar personajes error:", err.message);
@@ -598,28 +511,13 @@ async function handleListarPersonajes(res, tabla) {
 async function handleCrearPersonaje(req, res, tabla, animeKey) {
   const body = await parseBody(req);
   const { nombre, edad, poder_tecnica, nacionalidad, imagen1, imagen2, imagen3, imagen4 } = body;
-
-  if (!nombre?.trim()) {
-    return sendJSON(res, 400, { error: "El nombre del personaje es obligatorio." });
-  }
+  if (!nombre?.trim()) return sendJSON(res, 400, { error: "El nombre del personaje es obligatorio." });
 
   try {
     validarTablaOLanzar(tabla);
-    const t = escaparIdentificador(tabla);
-    // NOSONAR
     const result = await client.query(
-      `INSERT INTO "${t}" (nombre, edad, poder_tecnica, nacionalidad, imagen1, imagen2, imagen3, imagen4)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
-      [
-        nombre.trim(),
-        edad || null,
-        poder_tecnica || null,
-        nacionalidad || null,
-        imagen1 || null,
-        imagen2 || null,
-        imagen3 || null,
-        imagen4 || null,
-      ]
+      format(`INSERT INTO %I (${COLUMNAS_PERSONAJE}) VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`, tabla),
+      [nombre.trim(), edad || null, poder_tecnica || null, nacionalidad || null, imagen1 || null, imagen2 || null, imagen3 || null, imagen4 || null]
     );
     console.log(`✅ Personaje creado en "${animeKey}":`, nombre.trim());
     return sendJSON(res, 201, { ok: true, personaje: result.rows[0] });
@@ -633,16 +531,13 @@ async function handleBuscarPersonaje(res, tabla, param) {
   const esNumero = /^\d+$/.test(param);
   try {
     validarTablaOLanzar(tabla);
-    const t = escaparIdentificador(tabla);
     const query = esNumero
-      ? `SELECT * FROM "${t}" WHERE id = $1` // NOSONAR
-      : `SELECT * FROM "${t}" WHERE LOWER(nombre) = $1`; // NOSONAR
+      ? format("SELECT * FROM %I WHERE id = $1", tabla)
+      : format("SELECT * FROM %I WHERE LOWER(nombre) = $1", tabla);
     const valor = esNumero ? Number.parseInt(param, 10) : param;
     const result = await client.query(query, [valor]);
 
-    if (!result.rows[0]) {
-      return sendJSON(res, 404, { error: `Personaje no encontrado: "${param}"` });
-    }
+    if (!result.rows[0]) return sendJSON(res, 404, { error: `Personaje no encontrado: "${param}"` });
     return sendJSON(res, 200, result.rows[0]);
   } catch (err) {
     console.error("Buscar personaje error:", err.message);
@@ -653,24 +548,19 @@ async function handleBuscarPersonaje(res, tabla, param) {
 async function handleEditarPersonaje(req, res, tabla, animeKey, id) {
   const body = await parseBody(req);
   const { nombre } = body;
-
   if (!nombre?.trim()) return sendJSON(res, 400, { error: "El nombre es obligatorio." });
 
   try {
     validarTablaOLanzar(tabla);
-    const t = escaparIdentificador(tabla);
     const { sets, valores } = buildUpdatePersonaje(body);
-
     valores.push(id);
-    // NOSONAR
+
     const result = await client.query(
-      `UPDATE "${t}" SET ${sets.join(", ")} WHERE id = $${valores.length} RETURNING *`,
+      format(`UPDATE %I SET ${sets.join(", ")} WHERE id = $${valores.length} RETURNING *`, tabla),
       valores
     );
 
-    if (!result.rows[0]) {
-      return sendJSON(res, 404, { error: `Personaje con id ${id} no encontrado.` });
-    }
+    if (!result.rows[0]) return sendJSON(res, 404, { error: `Personaje con id ${id} no encontrado.` });
     console.log(`✅ Personaje editado en "${animeKey}": id=${id}`);
     return sendJSON(res, 200, { ok: true, personaje: result.rows[0] });
   } catch (err) {
@@ -682,14 +572,8 @@ async function handleEditarPersonaje(req, res, tabla, animeKey, id) {
 async function handleEliminarPersonaje(res, tabla, animeKey, id) {
   try {
     validarTablaOLanzar(tabla);
-    const t = escaparIdentificador(tabla);
-
     await client.query("BEGIN");
-    // NOSONAR
-    const result = await client.query(
-      `DELETE FROM "${t}" WHERE id = $1 RETURNING id`,
-      [id]
-    );
+    const result = await client.query(format("DELETE FROM %I WHERE id = $1 RETURNING id", tabla), [id]);
 
     if (!result.rows[0]) {
       await client.query("ROLLBACK");
@@ -788,29 +672,21 @@ async function handleRutaConTabla(req, res, method, partes, tabla, animeKey) {
       return handleListarPersonajes(res, tabla);
 
     case "POST:2":
-      if (!esCustom) {
-        return sendJSON(res, 403, { error: "Solo puedes agregar personajes a animes personalizados." });
-      }
+      if (!esCustom) return sendJSON(res, 403, { error: "Solo puedes agregar personajes a animes personalizados." });
       return handleCrearPersonaje(req, res, tabla, animeKey);
 
-    case "GET:3": {
-      const param = safeDecode(partes[2]).toLowerCase();
-      return handleBuscarPersonaje(res, tabla, param);
-    }
+    case "GET:3":
+      return handleBuscarPersonaje(res, tabla, safeDecode(partes[2]).toLowerCase());
 
     case "PUT:3": {
-      if (!esCustom) {
-        return sendJSON(res, 403, { error: "Solo puedes editar personajes de animes personalizados." });
-      }
+      if (!esCustom) return sendJSON(res, 403, { error: "Solo puedes editar personajes de animes personalizados." });
       const id = Number.parseInt(partes[2], 10);
       if (Number.isNaN(id)) return sendJSON(res, 400, { error: "ID inválido." });
       return handleEditarPersonaje(req, res, tabla, animeKey, id);
     }
 
     case "DELETE:3": {
-      if (!esCustom) {
-        return sendJSON(res, 403, { error: "Solo puedes eliminar personajes de animes personalizados." });
-      }
+      if (!esCustom) return sendJSON(res, 403, { error: "Solo puedes eliminar personajes de animes personalizados." });
       const id = Number.parseInt(partes[2], 10);
       if (Number.isNaN(id)) return sendJSON(res, 400, { error: "ID inválido." });
       return handleEliminarPersonaje(res, tabla, animeKey, id);
@@ -845,9 +721,7 @@ async function enrutador(req, res, pathname, method, partes) {
   if (partes[0] === "anime" && partes.length >= 2) {
     const animeKey = normalizarAnimeKey(partes[1]);
     const tabla = await getTabla(animeKey);
-    if (!tabla) {
-      return sendJSON(res, 404, { error: `Anime no encontrado: "${animeKey}".` });
-    }
+    if (!tabla) return sendJSON(res, 404, { error: `Anime no encontrado: "${animeKey}".` });
     return handleRutaConTabla(req, res, method, partes, tabla, animeKey);
   }
 
