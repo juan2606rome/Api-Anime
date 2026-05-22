@@ -1,0 +1,11 @@
+npm install
+
+npx expo prebuild
+
+cd Android
+
+gradlew assembleRelease
+
+el apk queda en 
+
+android/app/build/outputs/apk/release/app-release.apk
