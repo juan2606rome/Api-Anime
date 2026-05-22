@@ -83,6 +83,8 @@ export default function AnimePersonalizadoView({
     mensaje: "",
   });
 
+  const tieneResultado = error !== "" || personajeActual !== null || imagenes.length > 0;
+
   function cerrarDialogo() {
     setDialogo((prev) => ({
       ...prev,
@@ -185,7 +187,9 @@ export default function AnimePersonalizadoView({
         return;
       }
 
-      const imgs = [data.imagen1, data.imagen2, data.imagen3, data.imagen4].filter(Boolean) as string[];
+      const imgs = [data.imagen1, data.imagen2, data.imagen3, data.imagen4].filter(
+        Boolean
+      ) as string[];
       setPersonajeActual(data);
       setImagenes(imgs);
       guardarEnResumen(data);
@@ -337,90 +341,99 @@ export default function AnimePersonalizadoView({
 
   return (
     <View style={[styles.container, !visible && styles.hidden]}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <Text style={styles.title}>✨ {titulo}</Text>
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContent,
+          !tieneResultado ? styles.scrollContentCenter : styles.scrollContentTop,
+        ]}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.heroSection}>
+          <Text style={styles.title}>✨ {titulo}</Text>
 
-        <TextInput
-          style={styles.input}
-          placeholder="Buscar por nombre o ID..."
-          placeholderTextColor="#8A94A6"
-          value={texto}
-          onChangeText={setTexto}
-          onSubmitEditing={buscarPersonaje}
-          returnKeyType="search"
-        />
+          <TextInput
+            style={styles.input}
+            placeholder="Buscar por nombre o ID..."
+            placeholderTextColor="#8A94A6"
+            value={texto}
+            onChangeText={setTexto}
+            onSubmitEditing={buscarPersonaje}
+            returnKeyType="search"
+          />
 
-        <View style={styles.botonesRow}>
-          <Pressable style={[styles.btn, { backgroundColor: "#7B1FA2" }]} onPress={buscarPersonaje}>
-            <Text style={styles.btnText}>🔍 Buscar</Text>
-          </Pressable>
+          <View style={styles.botonesRow}>
+            <Pressable style={[styles.btn, { backgroundColor: "#7B1FA2" }]} onPress={buscarPersonaje}>
+              <Text style={styles.btnText}>🔍 Buscar</Text>
+            </Pressable>
 
-          <Pressable style={[styles.btn, { backgroundColor: "#2E7D32" }]} onPress={abrirFormAgregar}>
-            <Text style={styles.btnText}>＋ Agregar</Text>
-          </Pressable>
-        </View>
+            <Pressable style={[styles.btn, { backgroundColor: "#2E7D32" }]} onPress={abrirFormAgregar}>
+              <Text style={styles.btnText}>＋ Agregar</Text>
+            </Pressable>
+          </View>
 
-        {error !== "" && <Text style={styles.textoError}>{error}</Text>}
+          {error !== "" && <Text style={styles.textoError}>{error}</Text>}
 
-        {personajeActual && (
-          <Tarjeta>
-            <Text style={styles.text}>
-              <Text style={styles.label}>Nombre: </Text>
-              {personajeActual.nombre}
-            </Text>
-            <Text style={styles.text}>
-              <Text style={styles.label}>Edad: </Text>
-              {personajeActual.edad}
-            </Text>
-            <Text style={styles.text}>
-              <Text style={styles.label}>Poder/Técnica: </Text>
-              {personajeActual.poder_tecnica}
-            </Text>
-            <Text style={styles.text}>
-              <Text style={styles.label}>Nacionalidad: </Text>
-              {personajeActual.nacionalidad}
-            </Text>
+          {personajeActual && (
+            <Tarjeta>
+              <Text style={styles.text}>
+                <Text style={styles.label}>Nombre: </Text>
+                {personajeActual.nombre}
+              </Text>
+              <Text style={styles.text}>
+                <Text style={styles.label}>Edad: </Text>
+                {personajeActual.edad}
+              </Text>
+              <Text style={styles.text}>
+                <Text style={styles.label}>Poder/Técnica: </Text>
+                {personajeActual.poder_tecnica}
+              </Text>
+              <Text style={styles.text}>
+                <Text style={styles.label}>Nacionalidad: </Text>
+                {personajeActual.nacionalidad}
+              </Text>
 
-            {personajeActual.imagen1 && (
-              <View style={styles.imagenMainWrap}>
-                <Image
-                  source={{ uri: personajeActual.imagen1 }}
-                  style={styles.imagenMain}
-                  resizeMode="cover"
-                />
+              {personajeActual.imagen1 && (
+                <View style={styles.imagenMainWrap}>
+                  <Image
+                    source={{ uri: personajeActual.imagen1 }}
+                    style={styles.imagenMain}
+                    resizeMode="cover"
+                  />
+                </View>
+              )}
+
+              <View style={styles.accionesCard}>
+                {imagenes.length > 0 && (
+                  <Pressable
+                    style={[styles.btn, { backgroundColor: "#1565C0" }]}
+                    onPress={() => setModalGaleria(true)}
+                  >
+                    <Text style={styles.btnText}>🖼️ Ver Galería ({imagenes.length})</Text>
+                  </Pressable>
+                )}
+
+                <Pressable
+                  style={[styles.btn, { backgroundColor: "#F9A825" }]}
+                  onPress={() => abrirFormEditar(personajeActual)}
+                >
+                  <Text style={styles.btnTextDark}>✏️ Editar</Text>
+                </Pressable>
+
+                {eliminando ? (
+                  <ActivityIndicator color="#C62828" style={{ marginTop: 4 }} />
+                ) : (
+                  <Pressable
+                    style={[styles.btn, { backgroundColor: "#C62828" }]}
+                    onPress={() => confirmarEliminarPersonaje(personajeActual.id)}
+                  >
+                    <Text style={styles.btnText}>🗑️ Eliminar Personaje</Text>
+                  </Pressable>
+                )}
               </View>
-            )}
-
-            <View style={styles.accionesCard}>
-              {imagenes.length > 0 && (
-                <Pressable
-                  style={[styles.btn, { backgroundColor: "#1565C0" }]}
-                  onPress={() => setModalGaleria(true)}
-                >
-                  <Text style={styles.btnText}>🖼️ Ver Galería ({imagenes.length})</Text>
-                </Pressable>
-              )}
-
-              <Pressable
-                style={[styles.btn, { backgroundColor: "#F9A825" }]}
-                onPress={() => abrirFormEditar(personajeActual)}
-              >
-                <Text style={styles.btnTextDark}>✏️ Editar</Text>
-              </Pressable>
-
-              {eliminando ? (
-                <ActivityIndicator color="#C62828" style={{ marginTop: 4 }} />
-              ) : (
-                <Pressable
-                  style={[styles.btn, { backgroundColor: "#C62828" }]}
-                  onPress={() => confirmarEliminarPersonaje(personajeActual.id)}
-                >
-                  <Text style={styles.btnText}>🗑️ Eliminar Personaje</Text>
-                </Pressable>
-              )}
-            </View>
-          </Tarjeta>
-        )}
+            </Tarjeta>
+          )}
+        </View>
 
         <Text style={styles.listaTitle}>Todos los personajes ({personajes.length})</Text>
 
@@ -432,11 +445,7 @@ export default function AnimePersonalizadoView({
           </Text>
         ) : (
           personajes.map((p) => (
-            <Pressable
-              key={p.id}
-              style={styles.personajeItem}
-              onPress={() => seleccionarPersonaje(p)}
-            >
+            <Pressable key={p.id} style={styles.personajeItem} onPress={() => seleccionarPersonaje(p)}>
               {p.imagen1 ? (
                 <Image source={{ uri: p.imagen1 }} style={styles.personajeImg} />
               ) : (
@@ -664,8 +673,19 @@ const styles = StyleSheet.create({
     display: "none",
   },
   scrollContent: {
+    flexGrow: 1,
     padding: 20,
     paddingBottom: 50,
+  },
+  scrollContentCenter: {
+    justifyContent: "center",
+  },
+  scrollContentTop: {
+    justifyContent: "flex-start",
+  },
+  heroSection: {
+    minHeight: 380,
+    justifyContent: "center",
   },
 
   title: {

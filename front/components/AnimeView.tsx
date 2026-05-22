@@ -61,6 +61,7 @@ export default function AnimeView({ animeKey, titulo, color, visible = true }: P
   const [error, setError] = useState("");
 
   const cfg = CONFIG[animeKey] ?? CONFIG.saintseiya;
+  const tieneResultado = error !== "" || imagenFrontal !== null || imagenes.length > 0;
 
   async function consultar() {
     const busqueda = texto.trim();
@@ -109,9 +110,15 @@ export default function AnimeView({ animeKey, titulo, color, visible = true }: P
 
   return (
     <View style={[styles.container, !visible && styles.hidden]}>
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.scrollContent,
+          !tieneResultado ? styles.scrollContentCenter : styles.scrollContentTop,
+        ]}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
         <Text style={[styles.title, { color }]}>{titulo}</Text>
-
 
         <TextInput
           style={styles.input}
@@ -122,10 +129,7 @@ export default function AnimeView({ animeKey, titulo, color, visible = true }: P
         />
 
         <View style={styles.botonesRow}>
-          <Pressable
-            style={[styles.actionBtn, { backgroundColor: color }]}
-            onPress={consultar}
-          >
+          <Pressable style={[styles.actionBtn, { backgroundColor: color }]} onPress={consultar}>
             <Text style={styles.actionBtnText}>{cfg.btnLabel}</Text>
           </Pressable>
         </View>
@@ -154,10 +158,7 @@ export default function AnimeView({ animeKey, titulo, color, visible = true }: P
                 {cfg.emoji} {imagenes.length} imágenes encontradas
               </Text>
 
-              <Pressable
-                style={styles.galleryBtn}
-                onPress={() => setIsModalVisible(true)}
-              >
+              <Pressable style={styles.galleryBtn} onPress={() => setIsModalVisible(true)}>
                 <Text style={styles.galleryBtnText}>Ver galería</Text>
               </Pressable>
             </View>
@@ -208,27 +209,21 @@ const styles = StyleSheet.create({
     display: "none",
   },
   scrollContent: {
+    flexGrow: 1,
     padding: 20,
     paddingBottom: 40,
+  },
+  scrollContentCenter: {
+    justifyContent: "center",
+  },
+  scrollContentTop: {
+    justifyContent: "flex-start",
   },
   title: {
     fontSize: 26,
     fontWeight: "bold",
     marginBottom: 14,
     textAlign: "center",
-  },
-  headerBadge: {
-    alignSelf: "center",
-    borderWidth: 1,
-    paddingVertical: 6,
-    paddingHorizontal: 12,
-    borderRadius: 999,
-    marginBottom: 16,
-    backgroundColor: "#FFFFFF",
-  },
-  headerBadgeText: {
-    fontSize: 12,
-    fontWeight: "bold",
   },
   input: {
     width: "100%",
@@ -304,7 +299,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 14,
   },
-
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0,0,0,0.35)",
