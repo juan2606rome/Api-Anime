@@ -301,8 +301,8 @@ const swaggerSpec = {
       AnimePersonalizado: {
         type: "object",
         properties: {
-          nombre_clave: { type: "string", example: "dragonball" },
-          nombre_display: { type: "string", example: "Dragon Ball" },
+          nombre_clave: { type: "string", example: "fireforce" },
+          nombre_display: { type: "string", example: "fireforce" },
         },
       },
       CredencialesInput: {
@@ -316,13 +316,13 @@ const swaggerSpec = {
       RespuestaOk: { type: "object", properties: { ok: { type: "boolean", example: true } } },
       RespuestaError: { type: "object", properties: { error: { type: "string", example: "Descripción del error" } } },
       RespuestaLogin: { type: "object", properties: { ok: { type: "boolean", example: true }, usuario: { type: "string", example: "admin" } } },
-      RespuestaAnimeCreado: { type: "object", properties: { ok: { type: "boolean", example: true }, nombre_clave: { type: "string", example: "dragonball" }, nombre_display: { type: "string", example: "Dragon Ball" }, tabla: { type: "string", example: "custom_dragonball_personajes" } } },
+      RespuestaAnimeCreado: { type: "object", properties: { ok: { type: "boolean", example: true }, nombre_clave: { type: "string", example: "fireforce" }, nombre_display: { type: "string", example: "fireforce" }, tabla: { type: "string", example: "custom_fireforce_personajes" } } },
       RespuestaPersonajeCreado: { type: "object", properties: { ok: { type: "boolean", example: true }, personaje: { $ref: "#/components/schemas/Personaje" } } },
       RespuestaPersonajeEditado: { type: "object", properties: { ok: { type: "boolean", example: true }, personaje: { $ref: "#/components/schemas/Personaje" } } },
       RespuestaPersonajeEliminado: { type: "object", properties: { ok: { type: "boolean", example: true }, eliminado: { type: "integer", example: 3 } } },
     },
     parameters: {
-      animeParam: { name: "anime", in: "path", required: true, schema: { type: "string" }, description: "Clave del anime (`saintseiya`, `hunterxhunter`, `onepiece` o clave personalizada)", example: "dragonball" },
+      animeParam: { name: "anime", in: "path", required: true, schema: { type: "string" }, description: "Clave del anime (`saintseiya`, `hunterxhunter`, `onepiece` o clave personalizada)", example: "fireforce" },
       idOrNombreParam: { name: "idOrNombre", in: "path", required: true, schema: { type: "string" }, description: "ID numérico o nombre exacto del personaje (case-insensitive)", example: "1" },
     },
     responses: {
@@ -340,7 +340,7 @@ const swaggerSpec = {
     "/auth/register": { post: { tags: ["Auth"], summary: "Registrar nuevo usuario", operationId: "register", requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/CredencialesInput" } } } }, responses: { "201": { description: "Usuario creado" }, "400": { $ref: "#/components/responses/400" }, "409": { $ref: "#/components/responses/409" }, "500": { $ref: "#/components/responses/500" } } } },
     "/anime": {
       get: { tags: ["Animes"], summary: "Listar animes fijos", operationId: "getAnimesFijos", responses: { "200": { description: "Lista de claves fijas", content: { "application/json": { example: ["saintseiya", "hunterxhunter", "onepiece"] } } } } },
-      post: { tags: ["Animes"], summary: "Crear anime personalizado", operationId: "crearAnime", requestBody: { required: true, content: { "application/json": { schema: { type: "object", required: ["nombre"], properties: { nombre: { type: "string", example: "Dragon Ball Z" } } } } } }, responses: { "201": { description: "Anime creado", content: { "application/json": { schema: { $ref: "#/components/schemas/RespuestaAnimeCreado" } } } }, "400": { $ref: "#/components/responses/400" }, "409": { $ref: "#/components/responses/409" }, "500": { $ref: "#/components/responses/500" } } },
+      post: { tags: ["Animes"], summary: "Crear anime personalizado", operationId: "crearAnime", requestBody: { required: true, content: { "application/json": { schema: { type: "object", required: ["nombre"], properties: { nombre: { type: "string", example: "fireforce Z" } } } } } }, responses: { "201": { description: "Anime creado", content: { "application/json": { schema: { $ref: "#/components/schemas/RespuestaAnimeCreado" } } } }, "400": { $ref: "#/components/responses/400" }, "409": { $ref: "#/components/responses/409" }, "500": { $ref: "#/components/responses/500" } } },
     },
     "/anime/personalizados": { get: { tags: ["Animes"], summary: "Listar animes personalizados", operationId: "getAnimesPersonalizados", responses: { "200": { description: "Lista de animes personalizados", content: { "application/json": { schema: { type: "array", items: { $ref: "#/components/schemas/AnimePersonalizado" } } } } }, "500": { $ref: "#/components/responses/500" } } } },
     "/anime/{anime}": {
