@@ -1,0 +1,31 @@
+para reconstruir sin bajar el sonarqube
+
+docker compose up --build -d backend
+
+y después para que sonarqube haga otra vez el sacneo
+
+docker run --rm -v "%cd%:/usr/src" -w /usr/src sonarsource/sonar-scanner-cli -Dsonar.projectKey=ApiAnime -Dsonar.host.url=http://host.docker.internal:9000 -Dsonar.token=sqp_1392be3ff2b337efd1d9435b1a0e296ba1c18aa2
+
+
+CUIDADO CAMBIAR TOKEN AQUI Y EN SONARPROJECTPROPERTIES
+y tambien cambiar el nombre , osea la projectkey
+
+
+
+otros comandos
+docker compose down
+
+docker compose down -v
+
+docker compose restart backend
+docker compose restart sonarqube
+
+docker stats
+
+docker exec -it anime-backend sh
+
+
+
+
+Dockerfile → instrucciones para empaquetar tu backend en una imagen
+docker-compose.yml → orquesta dos contenedores: tu backend y SonarQube, juntos
