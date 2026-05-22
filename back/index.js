@@ -252,43 +252,13 @@ const swaggerSpec = {
   info: {
     title: "Anime Characters Microservice API",
     version: "2.3.0",
-    description: `
-## 📖 Descripción General
-
-API REST **agnóstica** (Node.js puro, sin frameworks) para la gestión completa de personajes de anime.
-
-Permite:
-- 🔐 Autenticación de usuarios (login y registro)
-- 🗂️ Gestión de animes: fijos del sistema y personalizados por el usuario
-- 🧑‍🎤 CRUD completo de personajes en animes personalizados
-- 🖼️ Soporte de imágenes en base64 o URL
-- 🧹 Compactación automática de IDs tras eliminación
-
----
-
-### 🏗️ Arquitectura agnóstica
-
-Este servicio **no depende de ningún framework** (Express, Fastify, Hapi, etc.).
-Está construido únicamente con módulos nativos de Node.js: \`http\`, \`url\`, y el driver \`pg\` para PostgreSQL.
-
-### 🗄️ Base de datos
-
-- Motor: **PostgreSQL**
-- Tablas fijas precargadas: \`saintseiya\`, \`hunterxhunter\`, \`onepiece\`
-- Tablas dinámicas: creadas automáticamente al agregar un anime personalizado
-
-### 🔑 Credenciales por defecto
-
-| Usuario | Contraseña |
-|---------|-----------|
-| admin   | admin123  |
-    `,
+    description: "API REST para la gestión de personajes de anime. Incluye autenticación, animes fijos y personalizados, y CRUD completo de personajes.",
     contact: { name: "Soporte del Microservicio", email: "soporte@animemicroservicio.com" },
     license: { name: "MIT", url: "https://opensource.org/licenses/MIT" },
   },
   servers: [
-    { url: "https://api-animemicroservicio.onrender.com", description: "🌐 Producción (Render)" },
-    { url: "http://localhost:3000", description: "💻 Local" },
+    { url: "https://api-animemicroservicio.onrender.com", description: "Producción (Render)" },
+    { url: "http://localhost:3000", description: "Local" },
   ],
   tags: [
     { name: "Sistema", description: "Health check del microservicio" },
@@ -606,57 +576,24 @@ function handleApiDocs(res) {
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Anime Microservice API — Swagger UI</title>
   <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui.css"/>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Segoe UI', sans-serif; background: #0d0d1a; }
-    #header-bar { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); padding: 18px 32px; display: flex; align-items: center; gap: 16px; border-bottom: 2px solid #e94560; box-shadow: 0 4px 20px rgba(233,69,96,0.3); }
-    #header-bar .logo { font-size: 2rem; }
-    #header-bar h1 { color: #ffffff; font-size: 1.4rem; font-weight: 700; }
-    #header-bar .badge { background: #e94560; color: #fff; font-size: 0.7rem; font-weight: 700; padding: 3px 10px; border-radius: 20px; text-transform: uppercase; letter-spacing: 1px; }
-    #header-bar .pill { margin-left: auto; background: rgba(255,255,255,0.08); color: #a0aec0; font-size: 0.75rem; padding: 4px 12px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.15); }
-    #info-bar { background: #111827; padding: 10px 32px; display: flex; gap: 24px; font-size: 0.78rem; color: #718096; border-bottom: 1px solid #1f2937; }
-    #info-bar span b { color: #a0aec0; }
-    #info-bar a { color: #63b3ed; text-decoration: none; }
-    .swagger-ui { background: #111827 !important; }
-    .swagger-ui .topbar { display: none !important; }
-    .swagger-ui .info .title { color: #f7fafc !important; }
-    .swagger-ui .scheme-container { background: #1a202c !important; box-shadow: none !important; }
-    .swagger-ui .opblock-tag { color: #e2e8f0 !important; border-color: #2d3748 !important; }
-    .swagger-ui .opblock { border-radius: 8px !important; margin-bottom: 8px !important; }
-    .swagger-ui .opblock.opblock-get    { background: #1a2744 !important; border-color: #3182ce !important; }
-    .swagger-ui .opblock.opblock-post   { background: #1a3a1a !important; border-color: #38a169 !important; }
-    .swagger-ui .opblock.opblock-put    { background: #3a2a00 !important; border-color: #d69e2e !important; }
-    .swagger-ui .opblock.opblock-delete { background: #3a1a1a !important; border-color: #e53e3e !important; }
-    .swagger-ui .btn.execute { background: #e94560 !important; border-color: #e94560 !important; }
-    .swagger-ui .parameter__name { color: #f6ad55 !important; }
-    .swagger-ui code { background: #2d3748 !important; color: #68d391 !important; }
-    #swagger-ui { max-width: 1200px; margin: 0 auto; padding: 0 16px 60px; }
-  </style>
 </head>
 <body>
-  <div id="header-bar">
-    <span class="logo">🎌</span>
-    <div><h1>Anime Microservice API</h1></div>
-    <span class="badge">v2.3.0</span>
-    <span class="pill">OpenAPI 3.0.3 · Node.js puro · PostgreSQL</span>
-  </div>
-  <div id="info-bar">
-    <span><b>Producción:</b> <a href="https://api-animemicroservicio.onrender.com" target="_blank">api-animemicroservicio.onrender.com</a></span>
-    <span><b>Spec JSON:</b> <a href="/swagger.json" target="_blank">/swagger.json</a></span>
-    <span><b>Arquitectura:</b> Agnóstica — sin frameworks externos</span>
-    <span><b>DB:</b> PostgreSQL</span>
-  </div>
   <div id="swagger-ui"></div>
   <script src="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-bundle.js"></script>
   <script src="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-standalone-preset.js"></script>
   <script>
     SwaggerUIBundle({
-      url: '/swagger.json', dom_id: '#swagger-ui',
+      url: '/swagger.json',
+      dom_id: '#swagger-ui',
       presets: [SwaggerUIBundle.presets.apis, SwaggerUIStandalonePreset],
       plugins: [SwaggerUIBundle.plugins.DownloadUrl],
-      layout: 'StandaloneLayout', deepLinking: true,
-      displayRequestDuration: true, defaultModelsExpandDepth: 2,
-      docExpansion: 'list', filter: true, tryItOutEnabled: true,
+      layout: 'StandaloneLayout',
+      deepLinking: true,
+      displayRequestDuration: true,
+      defaultModelsExpandDepth: 2,
+      docExpansion: 'list',
+      filter: true,
+      tryItOutEnabled: true,
     });
   </script>
 </body>
