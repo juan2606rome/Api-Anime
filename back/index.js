@@ -4,20 +4,20 @@ const { Client } = require("pg");
 
 const isProduction = process.env.NODE_ENV === "production";
 
-const client = new Client(
-  isProduction
-    ? {
-        connectionString: process.env.DATABASE_URL,
-        ssl: { rejectUnauthorized: false },
-      }
-    : {
-        host: "localhost",
-        port: 5432,
-        database: "pokemon_db",
-        user: "postgres",
-        password: "1234",
-      }
-);
+const clientConfig = process.env.DATABASE_URL
+  ? {
+      connectionString: process.env.DATABASE_URL,
+      ...(isProduction ? { ssl: { rejectUnauthorized: false } } : {}),
+    }
+  : {
+      host: process.env.DB_HOST || "localhost",
+      port: Number(process.env.DB_PORT) || 5432,
+      database: process.env.DB_NAME || "pokemon_db",
+      user: process.env.DB_USER || "postgres",
+      password: process.env.DB_PASSWORD || "1234",
+    };
+
+const client = new Client(clientConfig);
 
 client
   .connect()
@@ -431,7 +431,7 @@ const server = http.createServer(async (req, res) => {
     const body = await parseBody(req);
     const { usuario, contrasena } = body;
 
-    if (!usuario || !contrasena) {
+    if (!usuario?.trim() || !contrasena?.trim()) {
       return sendJSON(res, 400, { error: "Faltan usuario o contraseña" });
     }
 
@@ -457,7 +457,7 @@ const server = http.createServer(async (req, res) => {
     const body = await parseBody(req);
     const { usuario, contrasena } = body;
 
-    if (!usuario || !contrasena) {
+    if (!usuario?.trim() || !contrasena?.trim()) {
       return sendJSON(res, 400, { error: "Faltan usuario o contraseña" });
     }
 
@@ -499,7 +499,7 @@ const server = http.createServer(async (req, res) => {
     const body = await parseBody(req);
     const { nombre } = body;
 
-    if (!nombre || !nombre.trim()) {
+    if (!nombre?.trim()) {
       return sendJSON(res, 400, { error: "El nombre del anime es obligatorio" });
     }
 
@@ -600,7 +600,7 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
-    const esCustom = !Object.prototype.hasOwnProperty.call(TABLAS_FIJAS, animeKey);
+    const esCustom = !Object.hasOwn(TABLAS_FIJAS, animeKey);
 
     // ── GET /anime/:anime — Todos los personajes ───────────────────────────
     if (method === "GET" && partes.length === 2) {
@@ -633,7 +633,7 @@ const server = http.createServer(async (req, res) => {
         imagen4,
       } = body;
 
-      if (!nombre || !nombre.trim()) {
+      if (!nombre?.trim()) {
         return sendJSON(res, 400, { error: "El nombre del personaje es obligatorio." });
       }
 
@@ -711,7 +711,7 @@ const server = http.createServer(async (req, res) => {
         imagen4,
       } = body;
 
-      if (!nombre || !nombre.trim()) {
+      if (!nombre?.trim()) {
         return sendJSON(res, 400, { error: "El nombre es obligatorio." });
       }
 

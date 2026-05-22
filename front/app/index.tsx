@@ -9,10 +9,11 @@ import {
   Modal,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
-  View,
+  View
 } from "react-native";
 
 const API_URL = "https://api-animemicroservicio.onrender.com";
@@ -373,52 +374,58 @@ export default function Main() {
   return (
     <View style={styles.container}>
       <View style={styles.content}>
-        <View style={[styles.page, { display: animeActual === "saintseiya" ? "flex" : "none" }]}>
-          <AnimeView
-            animeKey="saintseiya"
-            titulo="Saint Seiya"
-            color="#B8860B"
-            visible={animeActual === "saintseiya"}
-          />
-        </View>
-
-        <View style={[styles.page, { display: animeActual === "hunterxhunter" ? "flex" : "none" }]}>
-          <AnimeView
-            animeKey="hunterxhunter"
-            titulo="Hunter x Hunter"
-            color="#2E7D32"
-            visible={animeActual === "hunterxhunter"}
-          />
-        </View>
-
-        <View style={[styles.page, { display: animeActual === "onepiece" ? "flex" : "none" }]}>
-          <AnimeView
-            animeKey="onepiece"
-            titulo="One Piece"
-            color="#C62828"
-            visible={animeActual === "onepiece"}
-          />
-        </View>
-
-        <View style={[styles.page, { display: animeActual === "resumen" ? "flex" : "none" }]}>
-          <ResumenView visible={animeActual === "resumen"} />
-        </View>
-
-        {animesPersonalizados.map((anime) => (
-          <View
-            key={anime.nombre_clave}
-            style={[styles.page, { display: animeActual === anime.nombre_clave ? "flex" : "none" }]}
-          >
-            <AnimePersonalizadoView
-              animeKey={anime.nombre_clave}
-              titulo={anime.nombre_display}
-              visible={animeActual === anime.nombre_clave}
-              onEliminarAnime={() =>
-                pedirConfirmacionEliminarAnime(anime.nombre_clave, anime.nombre_display)
-              }
+        <ScrollView
+          contentContainerStyle={styles.mainContentCenter}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={[styles.page, { display: animeActual === "saintseiya" ? "flex" : "none" }]}>
+            <AnimeView
+              animeKey="saintseiya"
+              titulo="Saint Seiya"
+              color="#B8860B"
+              visible={animeActual === "saintseiya"}
             />
           </View>
-        ))}
+
+          <View style={[styles.page, { display: animeActual === "hunterxhunter" ? "flex" : "none" }]}>
+            <AnimeView
+              animeKey="hunterxhunter"
+              titulo="Hunter x Hunter"
+              color="#2E7D32"
+              visible={animeActual === "hunterxhunter"}
+            />
+          </View>
+
+          <View style={[styles.page, { display: animeActual === "onepiece" ? "flex" : "none" }]}>
+            <AnimeView
+              animeKey="onepiece"
+              titulo="One Piece"
+              color="#C62828"
+              visible={animeActual === "onepiece"}
+            />
+          </View>
+
+          <View style={[styles.page, { display: animeActual === "resumen" ? "flex" : "none" }]}>
+            <ResumenView visible={animeActual === "resumen"} />
+          </View>
+
+          {animesPersonalizados.map((anime) => (
+            <View
+              key={anime.nombre_clave}
+              style={[styles.page, { display: animeActual === anime.nombre_clave ? "flex" : "none" }]}
+            >
+              <AnimePersonalizadoView
+                animeKey={anime.nombre_clave}
+                titulo={anime.nombre_display}
+                visible={animeActual === anime.nombre_clave}
+                onEliminarAnime={() =>
+                  pedirConfirmacionEliminarAnime(anime.nombre_clave, anime.nombre_display)
+                }
+              />
+            </View>
+          ))}
+        </ScrollView>
       </View>
 
       <Pressable
@@ -638,6 +645,10 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  mainContentCenter: {
+    flexGrow: 1,
+    justifyContent: "center",
   },
   page: {
     flex: 1,

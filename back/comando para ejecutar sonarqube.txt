@@ -1,1 +1,9 @@
-sonar-scanner -D"sonar.projectKey=anime-backend" -D"sonar.sources=." -D"sonar.host.url=http://localhost:9000" -D"sonar.login=sqp_6155b5d2e4db7b9f89378334ce49d88b5c6cffc6"
+sonar-scanner -D"sonar.projectKey=anime-backend" -D"sonar.sources=." -D"sonar.host.url=http://localhost:9000" -D"sonar.token=sqp_a9c19dce97a6d7c9cc410daec36f35faa50b5641" -D"sonar.exclusions=node_modules/**"
+
+
+
+docker compose down
+
+docker compose up --build -d
+
+docker logs -f sonarqube
